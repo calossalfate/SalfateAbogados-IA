@@ -10,7 +10,7 @@ export function StrongCTA() {
     <section className="relative min-h-[420px] overflow-hidden py-20 sm:min-h-[460px] sm:py-28">
       <div className="absolute inset-0 z-0">
         <Image
-          src="/ctafinal.jfif"
+          src="/ctafinal.jpg"
           alt=""
           fill
           quality={80}

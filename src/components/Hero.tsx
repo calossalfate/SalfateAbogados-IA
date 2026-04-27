@@ -25,7 +25,7 @@ export function Hero() {
     >
       <div className="absolute inset-0 z-0">
         <Image
-          src="/hero.jfif"
+          src="/hero.jpg"
           alt=""
           fill
           priority

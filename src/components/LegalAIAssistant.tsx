@@ -48,7 +48,7 @@ export function LegalAIAssistant() {
       <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute -right-[20%] top-0 h-full w-[90%] sm:w-[75%] lg:right-0 lg:w-[55%]">
           <Image
-            src="/ia.jfif"
+            src="/ia.jpg"
             alt=""
             fill
             quality={75}

@@ -132,7 +132,7 @@ export function PracticeAreas() {
 
           <div className="relative z-0 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 shadow-xl shadow-black/30 lg:aspect-auto lg:min-h-[320px] lg:w-[46%] lg:max-w-none lg:shrink-0">
             <Image
-              src="/derecho-publico.jfif"
+              src="/derecho-publico.jpg"
               alt="Instituciones y asesoría en derecho público"
               fill
               quality={80}
