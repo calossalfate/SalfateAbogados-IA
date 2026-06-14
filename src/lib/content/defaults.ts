@@ -1,0 +1,222 @@
+import type { SiteContent } from "./types";
+
+export const defaultSiteContent: SiteContent = {
+  siteName: "Salfate Abogados",
+  contact: {
+    email: "info@salfateabogados.cl",
+    phone: "+56991545512",
+    phoneDisplay: "+56 9 9154 5512",
+    whatsappNumber: "56991545512",
+    coverage: "Atención en todo Chile",
+  },
+  seo: {
+    title: "Salfate Abogados | Derecho Público y Administrativo",
+    description:
+      "Estudio jurídico especializado en Derecho Público, Derecho Administrativo, compras públicas, sumarios, litigación y asesoría integral en todo Chile.",
+    keywords: [
+      "abogados Chile",
+      "derecho público",
+      "derecho administrativo",
+      "compras públicas",
+      "Salfate Abogados",
+    ],
+  },
+  theme: "classic",
+  hero: {
+    badge: "Estudio jurídico · Chile",
+    title: "Defensa y asesoría legal estratégica frente al Estado",
+    subtitle:
+      "Especialistas en Derecho Público, Derecho Administrativo, compras públicas, sumarios, litigación y asesoría integral para personas, empresas, funcionarios e instituciones en todo Chile.",
+    ctaPrimary: "Solicitar evaluación legal",
+    ctaSecondary: "Iniciar diagnóstico legal",
+    panelTitle: "Panel operativo",
+    panelStatus: "En línea",
+    panelDisclaimer:
+      "Visualización orientativa de áreas de trabajo. No constituye asesoría legal.",
+    indicators: [
+      "Derecho Público",
+      "Compras Públicas",
+      "Sumarios",
+      "Litigación",
+      "Atención nacional",
+    ],
+  },
+  practiceAreas: {
+    eyebrow: "Derecho público",
+    title: "Especialidades principales",
+    subtitle:
+      "Equipo orientado a controversias con el sector público y a la asesoría integral, con profundidad técnica y visión práctica del entorno regulatorio chileno.",
+    subtitle2:
+      "Acompañamos a personas, empresas e instituciones en procedimientos ante organismos del Estado, tribunales administrativos y fiscalización sectorial.",
+    cta: "Agendar conversación inicial →",
+    areas: [
+      {
+        icon: "Building2",
+        title: "Derecho Público y Administrativo",
+        description:
+          "Organismos del Estado, procedimientos administrativos, fiscalización municipal y DOM, patentes comerciales, alcoholes y defensa de derechos en sede pública.",
+      },
+      {
+        icon: "FileText",
+        title: "Compras Públicas y Licitaciones",
+        description:
+          "Impugnaciones, revisiones de bases, estrategia ante el Tribunal de Compras Públicas y acompañamiento a proveedores.",
+      },
+      {
+        icon: "AlertTriangle",
+        title: "Sumarios Administrativos",
+        description:
+          "Defensa de funcionarios en investigaciones disciplinarias, descargos y recursos conforme a derecho.",
+      },
+      {
+        icon: "Vote",
+        title: "Derecho Electoral",
+        description:
+          "Asesoría en materias electorales, reclamos y controversias ante órganos competentes del sistema electoral.",
+      },
+      {
+        icon: "Calculator",
+        title: "Juicios de Cuenta",
+        description:
+          "Acompañamiento técnico en fiscalización de la gestión financiera de autoridades y entidades públicas.",
+      },
+      {
+        icon: "Shield",
+        title: "Transparencia, Lobby y Contraloría",
+        description:
+          "Cumplimiento normativo, reclamos, toma de razón y estrategia frente a exigencias de transparencia y fiscalización.",
+      },
+      {
+        icon: "Users",
+        title: "Fundaciones, Corporaciones y Organizaciones Comunitarias",
+        description:
+          "Constitución, modificaciones estatutarias, convenios con el Estado y gobernanza institucional.",
+      },
+      {
+        icon: "Scale",
+        title: "Litigación en Tribunales Superiores",
+        description:
+          "Recursos ante Cortes de Apelaciones, Corte Suprema y defensa en sede del Tribunal Constitucional.",
+      },
+      {
+        icon: "Briefcase",
+        title: "Derecho Laboral",
+        description:
+          "Negociación, finiquitos, despidos y representación en tribunales laborales y mediación.",
+      },
+      {
+        icon: "Home",
+        title: "Derecho Civil, Penal, Familia, Tránsito y Consumidor",
+        description:
+          "Asesoría y litigación en materias civiles, penales, familia, tránsito y relaciones de consumo.",
+      },
+      {
+        icon: "Droplets",
+        title: "Regularización de Propiedades y Derechos de Agua",
+        description:
+          "Bienes Nacionales, saneamiento, mensuras y regularización de situaciones dominiales y de uso de aguas.",
+      },
+      {
+        icon: "FileSearch",
+        title: "Estudios de Títulos y Corretaje",
+        description:
+          "Revisión de cadena dominial, riesgos registrales y apoyo en operaciones inmobiliarias.",
+      },
+    ],
+  },
+  faq: {
+    title: "Preguntas frecuentes",
+    subtitle: "Respuestas generales. Cada asunto requiere revisión particular.",
+    items: [
+      {
+        question: "¿Atienden en todo Chile?",
+        answer:
+          "Sí. Coordinamos reuniones presenciales cuando corresponde y atención remota segura para clientes en cualquier región.",
+      },
+      {
+        question: "¿Pueden revisar una licitación pública?",
+        answer:
+          "Trabajamos revisión de bases, ofertas, actas y estrategia de impugnación o defensa ante el Tribunal de Compras Públicas u otras instancias aplicables, según la etapa del procedimiento.",
+      },
+      {
+        question: "¿Defienden funcionarios en sumarios administrativos?",
+        answer:
+          "Sí. Acompañamos desde la notificación de inicio en la preparación de descargos, prueba y recursos, con foco en derechos del funcionario y debido proceso.",
+      },
+      {
+        question: "¿El diagnóstico IA reemplaza una consulta legal?",
+        answer:
+          "No. Es una herramienta orientativa que clasifica su relato y le indica qué documentación reunir. Solo un abogado, con antecedentes completos, puede entregar opinión jurídica válida para su caso.",
+      },
+      {
+        question: "¿Pueden representar ante Contraloría o tribunales?",
+        answer:
+          "Representamos en reclamos administrativos, defensa judicial y recursos ante tribunales superiores cuando la materia está dentro de nuestras áreas de trabajo acordadas con el cliente.",
+      },
+      {
+        question: "¿Trabajan con empresas y personas naturales?",
+        answer:
+          "Sí. Atendemos personas, empresas, fundaciones y organismos públicos o mixtos, según el encargo y conflicto planteado.",
+      },
+    ],
+  },
+  contactSection: {
+    title: "Contacto",
+    description:
+      "Cuéntenos brevemente su caso. Si completó el diagnóstico orientativo, el formulario se completará con la información relevante para agilizar su evaluación.",
+    caseTypes: [
+      "Compras públicas / licitaciones",
+      "Sumario administrativo",
+      "Municipal / patentes / fiscalización",
+      "Contraloría / transparencia / lobby",
+      "Laboral",
+      "Civil / penal / familia / consumidor",
+      "Propiedades / derechos de agua / títulos",
+      "Otro / a definir",
+    ],
+    successMessage:
+      "Solicitud recibida. Nos comunicaremos con usted a la brevedad.",
+    errorMessage:
+      "No pudimos enviar su mensaje. Intente por WhatsApp o correo directamente.",
+  },
+  strongCta: {
+    title:
+      "¿Tienes un conflicto con una institución pública o necesitas asesoría legal especializada?",
+    subtitle:
+      "Escríbenos por el canal que prefieras. Respondemos con enfoque profesional y reserva del caso.",
+  },
+  chat: {
+    assistantName: "Asistente Salfate",
+    subtitle: "Orientación legal inicial",
+    teaserMessages: [
+      "¿En qué puedo ayudarte?",
+      "Cuénteme su situación legal",
+      "Le oriento sobre su caso",
+      "¿Tiene un plazo próximo?",
+      "Le indico qué documentos reunir",
+      "Asesoría inicial orientativa",
+    ],
+    welcomeQuickReplies: [
+      "Analizar mi caso",
+      "Ver especialidades",
+      "Contactar abogado",
+      "¿Qué documentos necesito?",
+    ],
+  },
+  footer: {
+    tagline:
+      "Especialistas en Derecho Público y Administrativo. Atención en todo Chile.",
+    disclaimer:
+      "Información orientativa; no constituye asesoría legal específica.",
+  },
+};
+
+export function whatsappUrl(number: string, text?: string): string {
+  const base = `https://wa.me/${number.replace(/\D/g, "")}`;
+  if (!text) return base;
+  return `${base}?text=${encodeURIComponent(text)}`;
+}
+
+export function mailtoUrl(email: string): string {
+  return `mailto:${email}`;
+}

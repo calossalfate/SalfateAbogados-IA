@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { mailtoUrl, whatsappUrl } from "@/lib/content/defaults";
+import type { SiteContent } from "@/lib/content/types";
 
 const links = [
   { href: "#inicio", label: "Inicio" },
@@ -9,38 +11,48 @@ const links = [
   { href: "#contacto", label: "Contacto" },
 ];
 
-const WA = "https://wa.me/56991545512";
-const MAIL = "mailto:info@salfateabogados.cl";
 const DESIGN_CREDIT = "https://buglabsoluciones.com";
 
-export function Footer() {
+type FooterProps = {
+  siteName: string;
+  footer: SiteContent["footer"];
+  contact: SiteContent["contact"];
+};
+
+export function Footer({ siteName, footer, contact }: FooterProps) {
+  const wa = whatsappUrl(contact.whatsappNumber);
+  const mail = mailtoUrl(contact.email);
+  const [first, ...rest] = siteName.split(" ");
+
   return (
     <footer className="border-t border-white/10 py-14 bg-petrol-300/50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:items-start">
           <div>
             <p className="font-display text-2xl font-semibold text-ink">
-              Salfate <span className="text-accent">Abogados</span>
+              {first}{" "}
+              {rest.length > 0 ? (
+                <span className="text-accent">{rest.join(" ")}</span>
+              ) : null}
             </p>
             <p className="mt-2 max-w-sm text-sm text-muted leading-relaxed">
-              Especialistas en Derecho Público y Administrativo. Atención en
-              todo Chile.
+              {footer.tagline}
             </p>
           </div>
           <div className="text-sm text-muted space-y-2">
             <p>
-              <a href={MAIL} className="hover:text-accent-soft transition">
-                info@salfateabogados.cl
+              <a href={mail} className="hover:text-accent-soft transition">
+                {contact.email}
               </a>
             </p>
             <p>
               <a
-                href={WA}
+                href={wa}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-accent-soft transition"
               >
-                +56 9 9154 5512
+                {contact.phoneDisplay}
               </a>
             </p>
           </div>
@@ -58,8 +70,7 @@ export function Footer() {
         </div>
         <div className="mt-12 space-y-3 border-t border-white/5 pt-8 text-center text-xs text-muted">
           <p>
-            © {new Date().getFullYear()} Salfate Abogados. Información orientativa;
-            no constituye asesoría legal específica.
+            © {new Date().getFullYear()} {siteName}. {footer.disclaimer}
           </p>
           <p>
             Diseño web completo:{" "}

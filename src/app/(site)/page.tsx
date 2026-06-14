@@ -9,23 +9,30 @@ import { StrongCTA } from "@/components/StrongCTA";
 import { FAQ } from "@/components/FAQ";
 import { ContactSection } from "@/components/ContactSection";
 import { Footer } from "@/components/Footer";
+import { getSiteContent } from "@/lib/content/getSiteContent";
 
-export default function Home() {
+export default async function Home() {
+  const content = await getSiteContent();
+
   return (
     <>
       <Header />
       <main>
-        <Hero />
+        <Hero hero={content.hero} />
         <AuthorityBlock />
-        <PracticeAreas />
+        <PracticeAreas practiceAreas={content.practiceAreas} />
         <LegalAIAssistant />
         <Methodology />
         <AudienceSection />
-        <StrongCTA />
-        <FAQ />
-        <ContactSection />
+        <StrongCTA strongCta={content.strongCta} contact={content.contact} />
+        <FAQ faq={content.faq} />
+        <ContactSection contactSection={content.contactSection} />
       </main>
-      <Footer />
+      <Footer
+        siteName={content.siteName}
+        footer={content.footer}
+        contact={content.contact}
+      />
     </>
   );
 }

@@ -4,6 +4,8 @@ import {
   type LegalCategoryId,
   type LegalDiagnosticResult,
 } from "@/lib/legalAIDiagnostic";
+import { defaultSiteContent } from "@/lib/content/defaults";
+import type { SiteContent } from "@/lib/content/types";
 
 export type ChatRole = "user" | "assistant";
 
@@ -17,6 +19,7 @@ export type ChatMessage = {
 export type ChatContext = {
   lastDiagnostic: LegalDiagnosticResult | null;
   messageCount: number;
+  contact: SiteContent["contact"];
 };
 
 export type ChatReply = {
@@ -385,7 +388,7 @@ function helpMessage(seed: string): ChatReply {
   };
 }
 
-function contactMessage(seed: string): ChatReply {
+function contactMessage(seed: string, contact: SiteContent["contact"]): ChatReply {
   const intros = [
     "Claro, estos son los canales para contactar al estudio:",
     "Puede comunicarse con nosotros por cualquiera de estos medios:",
@@ -396,9 +399,9 @@ function contactMessage(seed: string): ChatReply {
     content: [
       pickVariant(intros, seed),
       "",
-      "• Correo: info@salfateabogados.cl",
-      "• WhatsApp: +56 9 9154 5512",
-      "• Cobertura: todo Chile",
+      `• Correo: ${contact.email}`,
+      `• WhatsApp: ${contact.phoneDisplay}`,
+      `• Cobertura: ${contact.coverage}`,
       "",
       "Si ya analizó su caso aquí, el formulario de contacto se completará con esa información.",
     ].join("\n"),
@@ -622,9 +625,9 @@ function handleQuickAction(
 
   if (n === "ver especialidades") return specialtiesMessage(seed);
   if (n === "contactar abogado" || n === "ir a contacto") {
+    const { contact } = context;
     return {
-      content:
-        "Le dirijo al formulario de contacto. Si ya analizó su caso aquí, el mensaje se completará automáticamente.\n\nTambién puede escribir a info@salfateabogados.cl o WhatsApp +56 9 9154 5512.",
+      content: `Le dirijo al formulario de contacto. Si ya analizó su caso aquí, el mensaje se completará automáticamente.\n\nTambién puede escribir a ${contact.email} o WhatsApp ${contact.phoneDisplay}.`,
       quickReplies: ["Analizar mi caso"],
       diagnostic: null,
       navigateTo: "contacto",
@@ -693,6 +696,7 @@ export function processChatMessage(
 ): ChatReply {
   const text = input.trim();
   const seed = text + String(context.messageCount);
+  const contact = context.contact ?? defaultSiteContent.contact;
 
   if (!text) {
     return {
@@ -710,7 +714,7 @@ export function processChatMessage(
   if (isAboutRequest(text)) return aboutMessage(seed);
   if (isPricingRequest(text)) return pricingMessage(seed);
   if (isUrgencyQuestion(text)) return urgencyMessage(context, seed);
-  if (isContactRequest(text)) return contactMessage(seed);
+  if (isContactRequest(text)) return contactMessage(seed, contact);
   if (isSpecialtiesRequest(text)) return specialtiesMessage(seed);
   if (isDocumentsRequest(text)) return documentsMessage(context, seed);
   if (isNavigationRequest(text)) return navigationMessage(text, seed);
@@ -787,7 +791,11 @@ export function createMessageId(): string {
   return `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
-export function getProactiveTeaser(pageSeconds: number): string {
-  const index = Math.floor(pageSeconds / 8) % TEASER_MESSAGES.length;
-  return TEASER_MESSAGES[index];
+export function getProactiveTeaser(
+  pageSeconds: number,
+  messages: string[] = TEASER_MESSAGES
+): string {
+  if (!messages.length) return TEASER_MESSAGES[0];
+  const index = Math.floor(pageSeconds / 8) % messages.length;
+  return messages[index];
 }

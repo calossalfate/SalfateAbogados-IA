@@ -20,9 +20,9 @@ const config: Config = {
         ink: "#e8edf4",
         muted: "#94a3b8",
         accent: {
-          DEFAULT: "#c9a962",
-          soft: "#d4b87a",
-          dark: "#9a7b3c",
+          DEFAULT: "var(--color-accent, #c9a962)",
+          soft: "var(--color-accent-soft, #d4b87a)",
+          dark: "var(--color-accent-dark, #9a7b3c)",
         },
         copper: {
           DEFAULT: "#b87333",

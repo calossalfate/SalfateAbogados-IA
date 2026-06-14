@@ -3,13 +3,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, Send, Minimize2 } from "lucide-react";
 import { ChatBotAvatar } from "@/components/ChatBotAvatar";
+import { useSiteContent } from "@/context/SiteContentContext";
 import {
   createMessageId,
-  createWelcomeChatMessage,
   computeTypingDelay,
   getProactiveTeaser,
   processChatMessage,
-  TEASER_MESSAGES,
   type ChatContext,
   type ChatMessage,
 } from "@/lib/legalChatBot";
@@ -30,16 +29,11 @@ function TypingIndicator() {
 }
 
 export function FloatingLegalChat() {
+  const { chat, contact } = useSiteContent();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    createWelcomeChatMessage(),
-  ]);
-  const [quickReplies, setQuickReplies] = useState<string[]>([
-    "Analizar mi caso",
-    "Ver especialidades",
-    "Contactar abogado",
-    "¿Qué documentos necesito?",
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [quickReplies, setQuickReplies] = useState<string[]>([]);
+  const [chatReady, setChatReady] = useState(false);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
@@ -47,7 +41,7 @@ export function FloatingLegalChat() {
     useState<LegalDiagnosticResult | null>(null);
   const [hasUnread, setHasUnread] = useState(false);
   const [showTeaser, setShowTeaser] = useState(false);
-  const [teaserText, setTeaserText] = useState(TEASER_MESSAGES[0]);
+  const [teaserText, setTeaserText] = useState(chat.teaserMessages[0]);
   const [teaserDismissed, setTeaserDismissed] = useState(false);
   const [hovered, setHovered] = useState(false);
 
@@ -65,6 +59,20 @@ export function FloatingLegalChat() {
   }, []);
 
   useEffect(() => {
+    if (chatReady) return;
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: `Hola, soy ${chat.assistantName}. Puedo orientarle sobre su caso, indicarle qué documentación reunir y guiarle por el sitio.\n\n¿Por dónde le gustaría empezar?`,
+        timestamp: Date.now(),
+      },
+    ]);
+    setQuickReplies(chat.welcomeQuickReplies);
+    setChatReady(true);
+  }, [chat, chatReady]);
+
+  useEffect(() => {
     if (open) {
       setHasUnread(false);
       setShowTeaser(false);
@@ -79,14 +87,16 @@ export function FloatingLegalChat() {
     const initial = window.setTimeout(() => setShowTeaser(true), 3500);
     const tick = window.setInterval(() => {
       pageSecondsRef.current += 1;
-      setTeaserText(getProactiveTeaser(pageSecondsRef.current));
+      setTeaserText(
+        getProactiveTeaser(pageSecondsRef.current, chat.teaserMessages)
+      );
     }, 8000);
 
     return () => {
       window.clearTimeout(initial);
       window.clearInterval(tick);
     };
-  }, [teaserDismissed, open]);
+  }, [teaserDismissed, open, chat.teaserMessages]);
 
   const sendMessage = useCallback(
     (text: string) => {
@@ -113,6 +123,7 @@ export function FloatingLegalChat() {
       const context: ChatContext = {
         lastDiagnostic,
         messageCount: nextCount,
+        contact,
       };
       const reply = processChatMessage(trimmed, context);
       const delay = computeTypingDelay(reply.content);
@@ -140,7 +151,7 @@ export function FloatingLegalChat() {
         if (!open) setHasUnread(true);
       }, delay);
     },
-    [typing, lastDiagnostic, messageCount, open]
+    [typing, lastDiagnostic, messageCount, open, contact]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -183,15 +194,15 @@ export function FloatingLegalChat() {
             <div className="flex items-center gap-3">
               <ChatBotAvatar size="sm" active />
               <div>
-                <p className="text-sm font-semibold text-ink">
-                  Asistente Salfate
-                </p>
-                <p className="flex items-center gap-1.5 text-xs text-emerald-300/90">
+              <p className="text-sm font-semibold text-ink">
+                {chat.assistantName}
+              </p>
+              <p className="flex items-center gap-1.5 text-xs text-emerald-300/90">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   </span>
-                  En línea · responde al instante
+                  En línea · {chat.subtitle}
                 </p>
               </div>
             </div>
@@ -311,9 +322,9 @@ export function FloatingLegalChat() {
               onClick={openChat}
               className="group w-full px-4 py-3 text-left transition hover:border-accent/50"
             >
-              <p className="text-xs font-medium text-accent-soft">
-                Asistente Salfate
-              </p>
+            <p className="text-xs font-medium text-accent-soft">
+              {chat.assistantName}
+            </p>
               <p className="mt-1 text-sm leading-snug text-ink">{teaserText}</p>
               <p className="mt-2 text-xs text-muted transition group-hover:text-accent-soft">
                 Toca para conversar →

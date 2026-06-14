@@ -1,26 +1,22 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { Mail, MessageCircle, MapPin, Send, CheckCircle2 } from "lucide-react";
+import {
+  Mail,
+  MessageCircle,
+  MapPin,
+  Send,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import { useSiteContent } from "@/context/SiteContentContext";
 import {
   DIAGNOSTIC_STORAGE_KEY,
   categoryToContactCaseType,
   type LegalDiagnosticResult,
 } from "@/lib/legalAIDiagnostic";
-
-const WA = "https://wa.me/56991545512";
-const MAIL = "mailto:info@salfateabogados.cl";
-
-const caseTypes = [
-  "Compras públicas / licitaciones",
-  "Sumario administrativo",
-  "Municipal / patentes / fiscalización",
-  "Contraloría / transparencia / lobby",
-  "Laboral",
-  "Civil / penal / familia / consumidor",
-  "Propiedades / derechos de agua / títulos",
-  "Otro / a definir",
-];
+import { mailtoUrl, whatsappUrl } from "@/lib/content/defaults";
+import type { SiteContent } from "@/lib/content/types";
 
 type StoredDiagnostic = {
   result: LegalDiagnosticResult;
@@ -44,10 +40,19 @@ function buildMessageFromDiagnostic(data: StoredDiagnostic): string {
   ].join("\n");
 }
 
-export function ContactSection() {
-  const [toast, setToast] = useState(false);
+type ContactSectionProps = {
+  contactSection: SiteContent["contactSection"];
+};
+
+export function ContactSection({ contactSection }: ContactSectionProps) {
+  const { contact } = useSiteContent();
+  const [toast, setToast] = useState<"success" | "error" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [caseType, setCaseType] = useState("");
   const [message, setMessage] = useState("");
+
+  const wa = whatsappUrl(contact.whatsappNumber);
+  const mail = mailtoUrl(contact.email);
 
   useEffect(() => {
     try {
@@ -62,13 +67,42 @@ export function ContactSection() {
     }
   }, []);
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setToast(true);
-    window.setTimeout(() => setToast(false), 5000);
-    (e.target as HTMLFormElement).reset();
-    setCaseType("");
-    setMessage("");
+    setSubmitting(true);
+    setToast(null);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.get("name"),
+          email: formData.get("email"),
+          phone: formData.get("phone"),
+          caseType,
+          message,
+        }),
+      });
+
+      if (!res.ok) {
+        setToast("error");
+        return;
+      }
+
+      setToast("success");
+      form.reset();
+      setCaseType("");
+      setMessage("");
+      window.setTimeout(() => setToast(null), 6000);
+    } catch {
+      setToast("error");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -80,18 +114,16 @@ export function ContactSection() {
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           <div>
             <h2 className="font-display text-3xl font-semibold text-ink sm:text-4xl">
-              Contacto
+              {contactSection.title}
             </h2>
             <p className="mt-4 text-muted leading-relaxed">
-              Cuéntenos brevemente su caso. Si completó el diagnóstico orientativo,
-              el formulario se completará con la información relevante para
-              agilizar su evaluación.
+              {contactSection.description}
             </p>
 
             <ul className="mt-10 space-y-5 text-sm">
               <li>
                 <a
-                  href={MAIL}
+                  href={mail}
                   className="group flex items-start gap-3 text-ink hover:text-accent-soft"
                 >
                   <Mail className="mt-0.5 h-5 w-5 text-accent shrink-0" />
@@ -99,13 +131,13 @@ export function ContactSection() {
                     <span className="block text-muted text-xs uppercase tracking-wider">
                       Correo
                     </span>
-                    info@salfateabogados.cl
+                    {contact.email}
                   </span>
                 </a>
               </li>
               <li>
                 <a
-                  href={WA}
+                  href={wa}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="group flex items-start gap-3 text-ink hover:text-accent-soft"
@@ -115,7 +147,7 @@ export function ContactSection() {
                     <span className="block text-muted text-xs uppercase tracking-wider">
                       Teléfono / WhatsApp
                     </span>
-                    +56 9 9154 5512
+                    {contact.phoneDisplay}
                   </span>
                 </a>
               </li>
@@ -125,7 +157,7 @@ export function ContactSection() {
                   <span className="block text-xs uppercase tracking-wider text-muted">
                     Cobertura
                   </span>
-                  Atención en todo Chile
+                  {contact.coverage}
                 </span>
               </li>
             </ul>
@@ -179,7 +211,7 @@ export function ContactSection() {
                   <option value="" disabled>
                     Seleccione…
                   </option>
-                  {caseTypes.map((t) => (
+                  {contactSection.caseTypes.map((t) => (
                     <option key={t} value={t}>
                       {t}
                     </option>
@@ -200,22 +232,31 @@ export function ContactSection() {
 
               <button
                 type="submit"
-                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-sm font-semibold text-petrol-300 transition hover:bg-accent-soft sm:w-auto sm:px-10"
+                disabled={submitting}
+                className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-sm font-semibold text-petrol-300 transition hover:bg-accent-soft disabled:opacity-60 sm:w-auto sm:px-10"
               >
                 <Send className="h-4 w-4" />
-                Enviar
+                {submitting ? "Enviando…" : "Enviar"}
               </button>
             </form>
 
-            {toast && (
+            {toast === "success" && (
               <div
                 className="absolute bottom-4 left-4 right-4 sm:left-8 sm:right-8 flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/90 px-4 py-3 text-sm text-emerald-100 shadow-lg animate-fade-in"
                 role="status"
               >
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
-                <span>
-                  Solicitud recibida. Nos comunicaremos con usted a la brevedad.
-                </span>
+                <span>{contactSection.successMessage}</span>
+              </div>
+            )}
+
+            {toast === "error" && (
+              <div
+                className="absolute bottom-4 left-4 right-4 sm:left-8 sm:right-8 flex items-center gap-3 rounded-xl border border-red-500/30 bg-red-950/90 px-4 py-3 text-sm text-red-100 shadow-lg animate-fade-in"
+                role="alert"
+              >
+                <AlertCircle className="h-5 w-5 shrink-0 text-red-400" />
+                <span>{contactSection.errorMessage}</span>
               </div>
             )}
           </div>
