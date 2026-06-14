@@ -37,6 +37,9 @@ const config: Config = {
         "fade-in": "fadeIn 0.6s ease-out forwards",
         "pulse-soft": "pulseSoft 2.5s ease-in-out infinite",
         shimmer: "shimmer 1.5s ease-in-out infinite",
+        "float-bot": "floatBot 3s ease-in-out infinite",
+        "bot-blink": "botBlink 4s ease-in-out infinite",
+        "teaser-in": "teaserIn 0.45s ease-out forwards",
       },
       keyframes: {
         fadeIn: {
@@ -50,6 +53,18 @@ const config: Config = {
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
+        },
+        floatBot: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
+        botBlink: {
+          "0%, 44%, 56%, 100%": { transform: "scaleY(1)" },
+          "50%": { transform: "scaleY(0.12)" },
+        },
+        teaserIn: {
+          "0%": { opacity: "0", transform: "translateX(12px) scale(0.95)" },
+          "100%": { opacity: "1", transform: "translateX(0) scale(1)" },
         },
       },
       backgroundImage: {
