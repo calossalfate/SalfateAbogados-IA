@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const nav = [
   { href: "#inicio", label: "Inicio" },
@@ -32,23 +33,45 @@ export function Header() {
           : "border-b border-white/5 bg-gradient-to-b from-black/55 via-black/30 to-transparent py-5 backdrop-blur-[2px]"
       }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-6 lg:gap-6 lg:px-8">
         <Link
           href="#inicio"
-          className={`font-display text-xl tracking-tight sm:text-2xl ${
-            scrolled
-              ? "font-semibold text-ink"
-              : "font-semibold text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
-          }`}
+          className="inline-flex min-w-0 shrink-0 items-center gap-3 rounded-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-3.5"
+          aria-label="Salfate Abogados — Inicio"
         >
-          Salfate{" "}
-          <span className="text-accent drop-shadow-[0_0_12px_rgba(201,169,98,0.35)]">
-            Abogados
+          <span
+            className={`relative flex shrink-0 items-center justify-center rounded-xl p-1.5 ring-1 transition ${
+              scrolled
+                ? "bg-white/10 ring-accent/25 shadow-md shadow-black/20"
+                : "bg-black/35 ring-accent/40 shadow-[0_4px_20px_rgba(0,0,0,0.45)] backdrop-blur-sm"
+            }`}
+          >
+            <BrandLogo
+              variant="mark"
+              priority
+              className={
+                scrolled
+                  ? "brightness-110 contrast-110"
+                  : "brightness-125 contrast-110 drop-shadow-[0_2px_8px_rgba(201,169,98,0.35)]"
+              }
+            />
+          </span>
+          <span
+            className={`hidden min-w-0 font-display text-lg font-semibold leading-tight tracking-tight sm:block sm:text-xl ${
+              scrolled
+                ? ""
+                : "drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+            }`}
+          >
+            <span className={scrolled ? "text-ink" : "text-white"}>
+              Salfate
+            </span>{" "}
+            <span className="text-accent">Abogados</span>
           </span>
         </Link>
 
         <nav
-          className={`hidden lg:flex items-center gap-8 text-sm ${
+          className={`hidden flex-1 items-center justify-center gap-6 text-sm xl:gap-8 lg:flex ${
             scrolled ? "font-normal text-muted" : "font-medium text-white/95"
           }`}
         >
@@ -56,7 +79,7 @@ export function Header() {
             <Link
               key={item.href}
               href={item.href}
-              className={`transition-colors [text-shadow:0_1px_4px_rgba(0,0,0,0.45)] ${
+              className={`whitespace-nowrap transition-colors [text-shadow:0_1px_4px_rgba(0,0,0,0.45)] ${
                 scrolled
                   ? "hover:text-accent"
                   : "hover:text-accent hover:[text-shadow:0_0_12px_rgba(201,169,98,0.25)]"
@@ -67,7 +90,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden lg:block">
+        <div className="hidden shrink-0 lg:block">
           <Link
             href="#contacto"
             className="inline-flex items-center justify-center rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-petrol-300 shadow-md shadow-black/30 transition hover:bg-accent-soft"
@@ -78,7 +101,7 @@ export function Header() {
 
         <button
           type="button"
-          className={`lg:hidden rounded-lg p-2 hover:bg-white/10 ${
+          className={`ml-auto shrink-0 rounded-lg p-2 hover:bg-white/10 lg:hidden ${
             scrolled ? "text-ink" : "text-white drop-shadow-md"
           }`}
           aria-expanded={open}

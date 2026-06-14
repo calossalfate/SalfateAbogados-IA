@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { mailtoUrl, whatsappUrl } from "@/lib/content/defaults";
 import type { SiteContent } from "@/lib/content/types";
+import { BrandLogo } from "@/components/BrandLogo";
+import { StudioCredit } from "@/components/StudioCredit";
 
 const links = [
   { href: "#inicio", label: "Inicio" },
@@ -11,8 +13,6 @@ const links = [
   { href: "#contacto", label: "Contacto" },
 ];
 
-const DESIGN_CREDIT = "https://buglabsoluciones.com";
-
 type FooterProps = {
   siteName: string;
   footer: SiteContent["footer"];
@@ -22,20 +22,16 @@ type FooterProps = {
 export function Footer({ siteName, footer, contact }: FooterProps) {
   const wa = whatsappUrl(contact.whatsappNumber);
   const mail = mailtoUrl(contact.email);
-  const [first, ...rest] = siteName.split(" ");
 
   return (
     <footer className="border-t border-white/10 py-14 bg-petrol-300/50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:items-start">
           <div>
-            <p className="font-display text-2xl font-semibold text-ink">
-              {first}{" "}
-              {rest.length > 0 ? (
-                <span className="text-accent">{rest.join(" ")}</span>
-              ) : null}
-            </p>
-            <p className="mt-2 max-w-sm text-sm text-muted leading-relaxed">
+            <div className="inline-flex rounded-2xl bg-white px-4 py-3 shadow-lg shadow-black/25 ring-1 ring-black/5">
+              <BrandLogo variant="full" />
+            </div>
+            <p className="mt-4 max-w-sm text-sm text-muted leading-relaxed">
               {footer.tagline}
             </p>
           </div>
@@ -68,25 +64,12 @@ export function Footer({ siteName, footer, contact }: FooterProps) {
             ))}
           </nav>
         </div>
-        <div className="mt-12 space-y-3 border-t border-white/5 pt-8 text-center text-xs text-muted">
-          <p>
-            © {new Date().getFullYear()} {siteName}. {footer.disclaimer}
-          </p>
-          <p>
-            Diseño web completo:{" "}
-            <a
-              href={DESIGN_CREDIT}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex flex-wrap items-center gap-x-1 underline-offset-2 hover:underline"
-            >
-              <span className="font-medium text-accent-soft/95 hover:text-accent">
-                BugLab Soluciones
-              </span>
-              <span className="text-muted/90">· buglabsoluciones.com</span>
-            </a>
-          </p>
-        </div>
+
+        <StudioCredit />
+
+        <p className="mt-8 text-center text-xs text-muted/90">
+          © {new Date().getFullYear()} {siteName}. {footer.disclaimer}
+        </p>
       </div>
     </footer>
   );

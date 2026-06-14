@@ -4,6 +4,7 @@ import {
   type LegalCategoryId,
   type LegalDiagnosticResult,
 } from "@/lib/legalAIDiagnostic";
+import { firstName, parseUserName } from "@/lib/chatSession";
 import { defaultSiteContent } from "@/lib/content/defaults";
 import type { SiteContent } from "@/lib/content/types";
 
@@ -20,6 +21,8 @@ export type ChatContext = {
   lastDiagnostic: LegalDiagnosticResult | null;
   messageCount: number;
   contact: SiteContent["contact"];
+  userName: string | null;
+  awaitingName: boolean;
 };
 
 export type ChatReply = {
@@ -27,10 +30,12 @@ export type ChatReply = {
   quickReplies: string[];
   diagnostic: LegalDiagnosticResult | null;
   navigateTo?: string;
+  userName?: string | null;
+  awaitingName?: boolean;
 };
 
 export const TEASER_MESSAGES = [
-  "¿En qué puedo ayudarte?",
+  "¿En qué puedo ayudarle?",
   "Cuénteme su situación legal",
   "Le oriento sobre su caso",
   "¿Tiene un plazo próximo?",
@@ -342,15 +347,22 @@ function persistDiagnostic(result: LegalDiagnosticResult, userText: string) {
   }
 }
 
-function welcomeMessage(seed: string): ChatReply {
-  const greetings = [
-    "Hola, soy el asistente de Salfate Abogados. Estoy aquí para orientarle sobre su caso, indicarle qué documentos reunir y guiarle por el sitio.",
-    "Bienvenido. Puedo ayudarle a entender en qué materia encaja su situación y qué pasos conviene evaluar primero.",
-    "Hola. Cuénteme qué ocurre y le daré una orientación legal inicial basada en su relato.",
-  ];
+function welcomeMessage(context: ChatContext, seed: string): ChatReply {
+  const name = firstName(context.userName);
+  const greetings = name
+    ? [
+        `Hola de nuevo, ${name}. ¿En qué más puedo orientarle?`,
+        `${name}, sigo aquí para ayudarle con su consulta legal.`,
+        `¿Qué más necesita, ${name}?`,
+      ]
+    : [
+        "Hola, soy el asistente de Salfate Abogados. Estoy aquí para orientarle sobre su caso, indicarle qué documentos reunir y guiarle por el sitio.",
+        "Bienvenido. Puedo ayudarle a entender en qué materia encaja su situación y qué pasos conviene evaluar primero.",
+        "Hola. Cuénteme qué ocurre y le daré una orientación legal inicial basada en su relato.",
+      ];
 
   return {
-    content: `${pickVariant(greetings, seed)}\n\n¿Por dónde le gustaría empezar?`,
+    content: pickVariant(greetings, seed),
     quickReplies: [
       "Analizar mi caso",
       "Ver especialidades",
@@ -358,6 +370,97 @@ function welcomeMessage(seed: string): ChatReply {
       "¿Qué documentos necesito?",
     ],
     diagnostic: null,
+  };
+}
+
+export function createNameRequestContent(assistantName: string): string {
+  return [
+    `Hola, soy ${assistantName}, consultor virtual de Salfate Abogados.`,
+    "",
+    "¿Cómo se llama? Lo recordaré solo durante esta visita.",
+  ].join("\n");
+}
+
+export function createPersonalizedWelcomeContent(userName: string): string {
+  const name = firstName(userName) ?? userName;
+  return [
+    `Un gusto, ${name}.`,
+    "",
+    "Puedo orientarle sobre su caso, indicarle qué documentación reunir o guiarle al contacto del estudio.",
+    "",
+    "¿Qué desea hacer?",
+  ].join("\n");
+}
+
+export function createAnonymousWelcomeContent(): string {
+  return [
+    "De acuerdo, continuamos sin nombre.",
+    "",
+    "Puedo orientarle sobre su caso, indicarle qué documentación reunir o guiarle al contacto del estudio.",
+    "",
+    "¿Qué desea hacer?",
+  ].join("\n");
+}
+
+function analyzeCasePrompt(context: ChatContext, seed: string): string {
+  const name = firstName(context.userName);
+
+  if (name) {
+    return `${name}, cuénteme con detalle qué ocurrió, con qué organismo o empresa está involucrado y si recibió alguna notificación o plazo próximo.`;
+  }
+
+  return pickVariant(
+    [
+      "Cuénteme con detalle qué ocurrió, con qué organismo o empresa está involucrado y si recibió alguna notificación o plazo próximo.",
+      "Describa su situación lo más completa posible: hechos, partes involucradas, documentos que tenga y fechas relevantes.",
+    ],
+    seed
+  );
+}
+
+function handleNameInput(text: string): ChatReply {
+  const parsed = parseUserName(text);
+
+  if (!parsed) {
+    return {
+      content: [
+        "No pude identificar su nombre.",
+        "",
+        "Escríbalo en una o dos palabras, por ejemplo: «María» o «Me llamo Carlos».",
+        "Si prefiere no indicarlo, escriba «Omitir».",
+      ].join("\n"),
+      quickReplies: ["Omitir"],
+      diagnostic: null,
+      userName: null,
+      awaitingName: true,
+    };
+  }
+
+  return {
+    content: createPersonalizedWelcomeContent(parsed),
+    quickReplies: [
+      "Analizar mi caso",
+      "Ver especialidades",
+      "Contactar abogado",
+      "¿Qué documentos necesito?",
+    ],
+    diagnostic: null,
+    userName: parsed,
+    awaitingName: false,
+  };
+}
+
+function handleSkipName(): ChatReply {
+  return {
+    content: createAnonymousWelcomeContent(),
+    quickReplies: [
+      "Analizar mi caso",
+      "Ver especialidades",
+      "Contactar abogado",
+    ],
+    diagnostic: null,
+    userName: null,
+    awaitingName: false,
   };
 }
 
@@ -452,7 +555,7 @@ function aboutMessage(seed: string): ChatReply {
       "",
       "Trabajamos compras públicas, sumarios, litigación, municipal, laboral y otras materias. Atendemos en todo Chile.",
       "",
-      "¿Le gustaría contarme su caso para orientarle de forma preliminar?",
+      "¿Le gustaría relatar su caso para orientarle de forma preliminar?",
     ].join("\n"),
     quickReplies: ["Analizar mi caso", "Ver especialidades", "Contactar abogado"],
     diagnostic: null,
@@ -496,9 +599,9 @@ function urgencyMessage(context: ChatContext, seed: string): ChatReply {
   return {
     content: pickVariant(
       [
-        "Para evaluar la urgencia necesito conocer su situación. ¿Hay una notificación, plazo o acto reciente?",
+        "Para evaluar la urgencia necesito conocer su situación. ¿Hay alguna notificación, plazo o acto reciente?",
         "La urgencia depende de fechas y etapa procesal. Cuénteme qué ocurrió y cuándo, y le orientaré.",
-        "Si tiene un plazo próximo, descríbame el caso y estimaré qué tan prioritario es actuar.",
+        "Si tiene un plazo próximo, cuénteme su caso y estimaré qué tan prioritario es actuar.",
       ],
       seed
     ),
@@ -552,7 +655,7 @@ function navigationMessage(text: string, seed: string): ChatReply {
     return {
       content: pickVariant(
         [
-          "Puede usar el diagnóstico completo en la sección «Diagnóstico legal», o contármelo aquí y le orientaré al instante.",
+          "Puede usar el diagnóstico completo en la sección «Diagnóstico legal», o cuéntemelo aquí y le orientaré al instante.",
           "Tiene dos opciones: la sección de diagnóstico en el sitio, o conversar conmigo directamente.",
         ],
         seed
@@ -611,13 +714,8 @@ function handleQuickAction(
   const n = normalize(text);
 
   if (n === "analizar mi caso" || n === "analizar otro caso") {
-    const prompts = [
-      "Perfecto. Cuénteme con detalle: qué ocurrió, con qué organismo o empresa está involucrado, fechas relevantes y si hay algún plazo próximo.",
-      "De acuerdo. Describa su situación lo más completa posible: hechos, actores, documentos que tenga y cualquier fecha límite.",
-      "Muy bien. Relámeme su caso: qué pasó, quién interviene y si recibió alguna notificación o resolución.",
-    ];
     return {
-      content: pickVariant(prompts, seed),
+      content: analyzeCasePrompt(context, seed),
       quickReplies: [],
       diagnostic: null,
     };
@@ -676,7 +774,7 @@ function fallbackMessage(context: ChatContext, seed: string): ChatReply {
       [
         "Para orientarle mejor, cuénteme qué ocurrió, con quién está el conflicto (municipalidad, empleador, organismo público…) y si hay plazos urgentes.",
         "Necesito un poco más de contexto. ¿Podría describir su situación con más detalle?",
-        "Si me explica brevemente su caso, podré clasificarlo y decirle qué documentos conviene reunir.",
+        "Si me explica brevemente su caso, podré clasificarlo e indicarle qué documentos conviene reunir.",
         "Puedo ayudarle con su caso, especialidades, documentos o contacto. ¿Qué le interesa?",
       ],
       seed
@@ -698,10 +796,21 @@ export function processChatMessage(
   const seed = text + String(context.messageCount);
   const contact = context.contact ?? defaultSiteContent.contact;
 
+  if (context.awaitingName) {
+    if (normalize(text) === "omitir") return handleSkipName();
+    if (text) return handleNameInput(text);
+    return {
+      content: "Indique su nombre para personalizar la conversación, o escriba «Omitir».",
+      quickReplies: ["Omitir"],
+      diagnostic: null,
+      awaitingName: true,
+    };
+  }
+
   if (!text) {
     return {
       content: "Escriba su consulta o elija una opción sugerida.",
-      quickReplies: welcomeMessage(seed).quickReplies,
+      quickReplies: welcomeMessage(context, seed).quickReplies,
       diagnostic: null,
     };
   }
@@ -709,7 +818,7 @@ export function processChatMessage(
   const quick = handleQuickAction(text, context, seed);
   if (quick) return quick;
 
-  if (isGreeting(text)) return welcomeMessage(seed);
+  if (isGreeting(text)) return welcomeMessage(context, seed);
   if (isHelpRequest(text)) return helpMessage(seed);
   if (isAboutRequest(text)) return aboutMessage(seed);
   if (isPricingRequest(text)) return pricingMessage(seed);
@@ -720,13 +829,20 @@ export function processChatMessage(
   if (isNavigationRequest(text)) return navigationMessage(text, seed);
 
   if (isThanks(text)) {
+    const name = firstName(context.userName);
     return {
       content: pickVariant(
-        [
-          "De nada. Estoy aquí si necesita ampliar la orientación o contactar al estudio.",
-          "Con gusto. Si surge otra duda sobre su caso, escríbame.",
-          "Me alegra haber ayudado. Puede volver cuando lo necesite.",
-        ],
+        name
+          ? [
+              `De nada, ${name}. Estoy aquí si necesita ampliar la orientación o contactar al estudio.`,
+              `Con gusto, ${name}. Si surge otra duda sobre su caso, puede escribirme aquí.`,
+              `Me alegra haberle ayudado, ${name}. Puede volver cuando lo necesite.`,
+            ]
+          : [
+              "De nada. Estoy aquí si necesita ampliar la orientación o contactar al estudio.",
+              "Con gusto. Si surge otra duda sobre su caso, puede escribirme aquí.",
+              "Me alegra haberle ayudado. Puede volver cuando lo necesite.",
+            ],
         seed
       ),
       quickReplies: ["Analizar mi caso", "Contactar abogado"],
@@ -735,13 +851,20 @@ export function processChatMessage(
   }
 
   if (isFarewell(text)) {
+    const name = firstName(context.userName);
     return {
       content: pickVariant(
-        [
-          "Hasta pronto. Recuerde que puede volver cuando necesite orientación legal.",
-          "Que le vaya bien. Aquí estaré si requiere más ayuda.",
-          "Nos leemos. No dude en escribir si tiene otra consulta.",
-        ],
+        name
+          ? [
+              `Hasta pronto, ${name}. Recuerde que puede volver cuando necesite orientación legal.`,
+              `Que le vaya bien, ${name}. Aquí estaré si requiere más ayuda.`,
+              `Hasta pronto, ${name}. No dude en escribir si tiene otra consulta.`,
+            ]
+          : [
+              "Hasta pronto. Recuerde que puede volver cuando necesite orientación legal.",
+              "Que le vaya bien. Aquí estaré si requiere más ayuda.",
+              "Hasta pronto. No dude en escribir si tiene otra consulta.",
+            ],
         seed
       ),
       quickReplies: [],
@@ -757,7 +880,7 @@ export function processChatMessage(
     return {
       content: pickVariant(
         [
-          "Perfecto. ¿Quiere contarme su caso, ver especialidades o ir al contacto?",
+          "Perfecto. ¿Desea analizar su caso, ver especialidades o ir al contacto?",
           "Muy bien. ¿Por dónde seguimos?",
         ],
         seed
@@ -777,12 +900,11 @@ export function processChatMessage(
   return fallbackMessage(context, seed);
 }
 
-export function createWelcomeChatMessage(): ChatMessage {
-  const reply = welcomeMessage("init");
+export function createNameRequestMessage(assistantName: string): ChatMessage {
   return {
-    id: "welcome",
+    id: "welcome-name",
     role: "assistant",
-    content: reply.content,
+    content: createNameRequestContent(assistantName),
     timestamp: Date.now(),
   };
 }

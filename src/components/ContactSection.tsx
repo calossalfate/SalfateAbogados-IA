@@ -85,6 +85,7 @@ export function ContactSection({ contactSection }: ContactSectionProps) {
           phone: formData.get("phone"),
           caseType,
           message,
+          website: formData.get("website"),
         }),
       });
 
@@ -227,6 +228,21 @@ export function ContactSection({ contactSection }: ContactSectionProps) {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-ink focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                />
+              </label>
+
+              {/* Campo trampa: oculto para usuarios, visible para bots */}
+              <label
+                className="absolute -left-[9999px] h-0 w-0 overflow-hidden opacity-0"
+                aria-hidden="true"
+                tabIndex={-1}
+              >
+                <span>Sitio web</span>
+                <input
+                  type="text"
+                  name="website"
+                  autoComplete="off"
+                  tabIndex={-1}
                 />
               </label>
 

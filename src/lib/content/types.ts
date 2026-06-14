@@ -79,4 +79,6 @@ export type ContactFormPayload = {
   phone?: string;
   caseType: string;
   message: string;
+  /** Campo trampa anti-bots; debe ir vacío. */
+  website?: string;
 };

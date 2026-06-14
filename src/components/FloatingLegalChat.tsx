@@ -1,11 +1,20 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { X, Send, Minimize2 } from "lucide-react";
+import { X, Send, Minimize2, RotateCcw } from "lucide-react";
 import { ChatBotAvatar } from "@/components/ChatBotAvatar";
 import { useSiteContent } from "@/context/SiteContentContext";
 import {
+  clearChatSession,
+  createEmptySession,
+  firstName,
+  loadChatSession,
+  saveChatSession,
+  type ChatSessionData,
+} from "@/lib/chatSession";
+import {
   createMessageId,
+  createNameRequestMessage,
   computeTypingDelay,
   getProactiveTeaser,
   processChatMessage,
@@ -28,6 +37,41 @@ function TypingIndicator() {
   );
 }
 
+function buildInitialMessages(
+  session: ChatSessionData | null,
+  assistantName: string,
+  welcomeQuickReplies: string[]
+): { messages: ChatMessage[]; quickReplies: string[] } {
+  if (session?.messages.length) {
+    return {
+      messages: session.messages,
+      quickReplies: session.awaitingName ? ["Omitir"] : welcomeQuickReplies,
+    };
+  }
+
+  if (session?.userName && !session.awaitingName) {
+    const name = firstName(session.userName);
+    return {
+      messages: [
+        {
+          id: "welcome-back",
+          role: "assistant",
+          content: name
+            ? `Hola de nuevo, ${name}. Retomamos donde lo dejó.\n\n¿En qué puedo orientarle?`
+            : "Hola de nuevo. ¿En qué puedo orientarle?",
+          timestamp: Date.now(),
+        },
+      ],
+      quickReplies: welcomeQuickReplies,
+    };
+  }
+
+  return {
+    messages: [createNameRequestMessage(assistantName)],
+    quickReplies: ["Omitir"],
+  };
+}
+
 export function FloatingLegalChat() {
   const { chat, contact } = useSiteContent();
   const [open, setOpen] = useState(false);
@@ -37,6 +81,8 @@ export function FloatingLegalChat() {
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
   const [messageCount, setMessageCount] = useState(0);
+  const [userName, setUserName] = useState<string | null>(null);
+  const [awaitingName, setAwaitingName] = useState(true);
   const [lastDiagnostic, setLastDiagnostic] =
     useState<LegalDiagnosticResult | null>(null);
   const [hasUnread, setHasUnread] = useState(false);
@@ -49,6 +95,25 @@ export function FloatingLegalChat() {
   const inputRef = useRef<HTMLInputElement>(null);
   const pageSecondsRef = useRef(0);
 
+  const persistSession = useCallback(
+    (
+      next: Partial<ChatSessionData> & {
+        messages: ChatMessage[];
+        messageCount: number;
+      }
+    ) => {
+      saveChatSession({
+        userName: next.userName ?? userName,
+        awaitingName: next.awaitingName ?? awaitingName,
+        messages: next.messages,
+        messageCount: next.messageCount,
+        lastDiagnostic: next.lastDiagnostic ?? lastDiagnostic,
+        updatedAt: Date.now(),
+      });
+    },
+    [userName, awaitingName, lastDiagnostic]
+  );
+
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       listRef.current?.scrollTo({
@@ -60,17 +125,27 @@ export function FloatingLegalChat() {
 
   useEffect(() => {
     if (chatReady) return;
-    setMessages([
-      {
-        id: "welcome",
-        role: "assistant",
-        content: `Hola, soy ${chat.assistantName}. Puedo orientarle sobre su caso, indicarle qué documentación reunir y guiarle por el sitio.\n\n¿Por dónde le gustaría empezar?`,
-        timestamp: Date.now(),
-      },
-    ]);
-    setQuickReplies(chat.welcomeQuickReplies);
+
+    const session = loadChatSession();
+    const initial = buildInitialMessages(
+      session,
+      chat.assistantName,
+      chat.welcomeQuickReplies
+    );
+
+    setMessages(initial.messages);
+    setQuickReplies(initial.quickReplies);
+    setMessageCount(session?.messageCount ?? 0);
+    setUserName(session?.userName ?? null);
+    setAwaitingName(session?.awaitingName ?? true);
+    setLastDiagnostic(session?.lastDiagnostic ?? null);
     setChatReady(true);
   }, [chat, chatReady]);
+
+  useEffect(() => {
+    if (!chatReady) return;
+    persistSession({ messages, messageCount });
+  }, [chatReady, messages, messageCount, persistSession]);
 
   useEffect(() => {
     if (open) {
@@ -98,6 +173,22 @@ export function FloatingLegalChat() {
     };
   }, [teaserDismissed, open, chat.teaserMessages]);
 
+  const resetConversation = useCallback(() => {
+    clearChatSession();
+    const empty = createEmptySession();
+    const initial = buildInitialMessages(null, chat.assistantName, chat.welcomeQuickReplies);
+
+    setMessages(initial.messages);
+    setQuickReplies(initial.quickReplies);
+    setMessageCount(0);
+    setUserName(empty.userName);
+    setAwaitingName(true);
+    setLastDiagnostic(null);
+    setInput("");
+    setTyping(false);
+    saveChatSession(empty);
+  }, [chat.assistantName, chat.welcomeQuickReplies]);
+
   const sendMessage = useCallback(
     (text: string) => {
       const trimmed = text.trim();
@@ -110,7 +201,8 @@ export function FloatingLegalChat() {
         timestamp: Date.now(),
       };
 
-      setMessages((prev) => [...prev, userMsg]);
+      const nextMessages = [...messages, userMsg];
+      setMessages(nextMessages);
       setInput("");
       setQuickReplies([]);
       setTyping(true);
@@ -124,14 +216,23 @@ export function FloatingLegalChat() {
         lastDiagnostic,
         messageCount: nextCount,
         contact,
+        userName,
+        awaitingName,
       };
       const reply = processChatMessage(trimmed, context);
       const delay = computeTypingDelay(reply.content);
 
       window.setTimeout(() => {
-        if (reply.diagnostic) {
-          setLastDiagnostic(reply.diagnostic);
-        }
+        const nextUserName =
+          reply.userName !== undefined ? reply.userName : userName;
+        const nextAwaitingName =
+          reply.awaitingName !== undefined ? reply.awaitingName : awaitingName;
+
+        if (reply.userName !== undefined) setUserName(reply.userName);
+        if (reply.awaitingName !== undefined) setAwaitingName(reply.awaitingName);
+
+        const nextDiagnostic = reply.diagnostic ?? lastDiagnostic;
+        if (reply.diagnostic) setLastDiagnostic(reply.diagnostic);
 
         if (reply.navigateTo) {
           window.location.hash = reply.navigateTo;
@@ -144,14 +245,33 @@ export function FloatingLegalChat() {
           timestamp: Date.now(),
         };
 
-        setMessages((prev) => [...prev, botMsg]);
+        const finalMessages = [...nextMessages, botMsg];
+        setMessages(finalMessages);
         setQuickReplies(reply.quickReplies);
         setTyping(false);
+
+        saveChatSession({
+          userName: nextUserName,
+          awaitingName: nextAwaitingName,
+          messages: finalMessages,
+          messageCount: nextCount,
+          lastDiagnostic: nextDiagnostic,
+          updatedAt: Date.now(),
+        });
 
         if (!open) setHasUnread(true);
       }, delay);
     },
-    [typing, lastDiagnostic, messageCount, open, contact]
+    [
+      typing,
+      lastDiagnostic,
+      messageCount,
+      open,
+      contact,
+      userName,
+      awaitingName,
+      messages,
+    ]
   );
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -171,9 +291,16 @@ export function FloatingLegalChat() {
     setTeaserDismissed(true);
   };
 
+  const inputPlaceholder = awaitingName
+    ? "Escriba su nombre…"
+    : "Escriba su consulta…";
+
+  const headerSubtitle = userName
+    ? `Atendiendo a ${firstName(userName)}`
+    : chat.subtitle;
+
   return (
     <>
-      {/* Panel de chat */}
       <div
         className={`fixed bottom-[5.5rem] right-4 z-50 flex w-[calc(100vw-2rem)] max-w-[420px] flex-col overflow-hidden rounded-2xl border border-white/12 bg-graphite/97 shadow-2xl shadow-black/60 backdrop-blur-xl transition-all duration-300 sm:right-6 ${
           open
@@ -194,19 +321,28 @@ export function FloatingLegalChat() {
             <div className="flex items-center gap-3">
               <ChatBotAvatar size="sm" active />
               <div>
-              <p className="text-sm font-semibold text-ink">
-                {chat.assistantName}
-              </p>
-              <p className="flex items-center gap-1.5 text-xs text-emerald-300/90">
+                <p className="text-sm font-semibold text-ink">
+                  {chat.assistantName}
+                </p>
+                <p className="flex items-center gap-1.5 text-xs text-emerald-300/90">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                     <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
                   </span>
-                  En línea · {chat.subtitle}
+                  En línea · {headerSubtitle}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={resetConversation}
+                className="rounded-lg p-2 text-muted transition hover:bg-white/10 hover:text-ink"
+                aria-label="Nueva conversación"
+                title="Nueva conversación"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </button>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
@@ -286,10 +422,10 @@ export function FloatingLegalChat() {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Escriba su consulta…"
+            placeholder={inputPlaceholder}
             disabled={typing}
             className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-ink placeholder:text-muted/60 focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 disabled:opacity-60"
-            aria-label="Mensaje para el asistente"
+            aria-label={inputPlaceholder}
           />
           <button
             type="submit"
@@ -302,7 +438,6 @@ export function FloatingLegalChat() {
         </form>
       </div>
 
-      {/* Notificación proactiva */}
       {showTeaser && !open && !teaserDismissed && (
         <div
           className="fixed bottom-[5.25rem] right-4 z-50 max-w-[260px] animate-teaser-in sm:right-6"
@@ -322,9 +457,9 @@ export function FloatingLegalChat() {
               onClick={openChat}
               className="group w-full px-4 py-3 text-left transition hover:border-accent/50"
             >
-            <p className="text-xs font-medium text-accent-soft">
-              {chat.assistantName}
-            </p>
+              <p className="text-xs font-medium text-accent-soft">
+                {chat.assistantName}
+              </p>
               <p className="mt-1 text-sm leading-snug text-ink">{teaserText}</p>
               <p className="mt-2 text-xs text-muted transition group-hover:text-accent-soft">
                 Toca para conversar →
@@ -338,7 +473,6 @@ export function FloatingLegalChat() {
         </div>
       )}
 
-      {/* Launcher con robot */}
       <div
         className="fixed bottom-5 right-4 z-50 sm:right-6"
         onMouseEnter={() => setHovered(true)}

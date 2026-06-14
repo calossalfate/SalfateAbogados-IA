@@ -186,10 +186,10 @@ export const defaultSiteContent: SiteContent = {
       "Escríbenos por el canal que prefieras. Respondemos con enfoque profesional y reserva del caso.",
   },
   chat: {
-    assistantName: "Asistente Salfate",
-    subtitle: "Orientación legal inicial",
+    assistantName: "Lex",
+    subtitle: "Consultor jurídico virtual",
     teaserMessages: [
-      "¿En qué puedo ayudarte?",
+      "¿En qué puedo ayudarle?",
       "Cuénteme su situación legal",
       "Le oriento sobre su caso",
       "¿Tiene un plazo próximo?",

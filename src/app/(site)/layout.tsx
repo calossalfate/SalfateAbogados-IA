@@ -10,6 +10,10 @@ export async function generateMetadata(): Promise<Metadata> {
     title: content.seo.title,
     description: content.seo.description,
     keywords: content.seo.keywords,
+    icons: {
+      icon: [{ url: "/logo-mark.png", type: "image/png" }],
+      apple: [{ url: "/logo-mark.png", type: "image/png" }],
+    },
   };
 }
 
