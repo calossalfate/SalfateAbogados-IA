@@ -13,7 +13,7 @@ const items = [
   },
   {
     q: "¿El diagnóstico IA reemplaza una consulta legal?",
-    a: "No. Es una herramienta orientativa de demostración. Solo un abogado, con antecedentes completos, puede entregar opinión jurídica válida para su caso.",
+    a: "No. Es una herramienta orientativa que clasifica su relato y le indica qué documentación reunir. Solo un abogado, con antecedentes completos, puede entregar opinión jurídica válida para su caso.",
   },
   {
     q: "¿Pueden representar ante Contraloría o tribunales?",

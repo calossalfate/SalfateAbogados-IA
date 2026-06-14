@@ -14,9 +14,23 @@ export interface LegalDiagnosticResult {
   categoryLabel: string;
   urgency: UrgencyLevel;
   actions: string[];
+  /** Documentos prioritarios que el cliente debe reunir antes de la consulta. */
   documents: string[];
+  /** Mensaje orientado a solicitar la documentación específica del caso. */
+  documentationRequest: string;
   recommendation: string;
 }
+
+/** Mapeo de categoría diagnóstica → opción del formulario de contacto. */
+export const categoryToContactCaseType: Record<LegalCategoryId, string> = {
+  compras_publicas: "Compras públicas / licitaciones",
+  sumario: "Sumario administrativo",
+  municipal: "Municipal / patentes / fiscalización",
+  reclamacion_admin: "Contraloría / transparencia / lobby",
+  laboral: "Laboral",
+  general: "Civil / penal / familia / consumidor",
+  inicial: "Otro / a definir",
+};
 
 const normalize = (s: string) =>
   s
@@ -29,7 +43,10 @@ function matchesAny(text: string, keywords: string[]): boolean {
   return keywords.some((k) => n.includes(normalize(k)));
 }
 
-/** Clasificación local por palabras clave. Sustituible en segunda etapa por respuesta de API. */
+/** Clave de sessionStorage para vincular diagnóstico con formulario de contacto. */
+export const DIAGNOSTIC_STORAGE_KEY = "salfate-legal-diagnostic";
+
+/** Clasificación orientativa por materia y palabras clave del relato del cliente. */
 export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
   const text = input.trim();
   if (!text) {
@@ -82,6 +99,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Actas o resoluciones de adjudicación o desiertas",
         "Correo u oficios del organismo",
       ],
+      documentationRequest:
+        "Para evaluar su caso con precisión, necesitamos revisar las bases o pliego de la licitación, su oferta completa con anexos, las actas o resoluciones del procedimiento y toda comunicación oficial del organismo contratante. Si existe plazo próximo a vencer, indíquelo al contactarnos.",
       recommendation:
         "La estrategia depende del estado del procedimiento y de los plazos legales. Conviene ordenar la carpeta y revisar formalidad de actuaciones antes de impugnar o reclamar.",
     };
@@ -115,6 +134,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Descargos o declaraciones ya presentadas",
         "Reglamento interno o estatuto aplicable",
       ],
+      documentationRequest:
+        "En sumarios administrativos los plazos son estrictos. Solicitamos la resolución de inicio, el detalle de cargos, cualquier descargo ya presentado y el reglamento o estatuto aplicable. Si aún no ha sido notificado formalmente, indique la fecha y forma en que tomó conocimiento del procedimiento.",
       recommendation:
         "Los sumarios suelen tener plazos estrictos. Es recomendable actuar con rapidez y con defensa técnica alineada al mérito del expediente.",
     };
@@ -148,6 +169,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Solicitudes de permisos o rectificaciones",
         "Correspondencia con la municipalidad",
       ],
+      documentationRequest:
+        "Para orientar la vía procesal adecuada, requerimos las resoluciones de patente o fiscalización, informes de inspectores, solicitudes de permisos presentadas y toda correspondencia con la municipalidad. Si el acto fue notificado recientemente, conserve el comprobante de recepción.",
       recommendation:
         "La vía depende del tipo de acto y del órgano emisor. Una revisión ordenada de la carpeta municipal suele definir el siguiente paso procesal.",
     };
@@ -181,6 +204,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Correspondencia con superintendencia u órgano fiscalizador",
         "Estatutos o resoluciones internas relevantes",
       ],
+      documentationRequest:
+        "Solicitamos el acto administrativo o informe impugnado, el expediente o antecedentes del trámite en el servicio, la correspondencia con el órgano fiscalizador y estatutos o resoluciones internas vinculadas. Indique también la fecha de notificación para verificar plazos de reclamación.",
       recommendation:
         "Estas materias combinan técnica sustantiva y cumplimiento de plazos. La revisión temprana reduce riesgos de caducidad o improcedencia.",
     };
@@ -213,6 +238,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Liquidaciones y finiquitos",
         "Correo o comunicaciones con la empresa",
       ],
+      documentationRequest:
+        "Para analizar su situación laboral, necesitamos el contrato de trabajo y sus anexos, cartas de despido o aviso, liquidaciones o finiquitos firmados o pendientes, y comunicaciones con la empresa. Si el despido fue reciente, indique la fecha exacta para calcular plazos de tutela laboral.",
       recommendation:
         "Los plazos para interponer tutela u otras acciones son relevantes. Conviene reunir la documentación laboral antes de definir la estrategia.",
     };
@@ -246,6 +273,8 @@ export function diagnoseLegalCase(input: string): LegalDiagnosticResult {
         "Partes policiales o informes",
         "Antecedentes médicos o periciales si aplica",
       ],
+      documentationRequest:
+        "Según la materia de su caso, solicitamos los escritos o citaciones recibidas, contratos o correspondencia relevante, partes policiales o informes disponibles, y antecedentes médicos o periciales si corresponde. Una cronología breve de los hechos también facilita la evaluación inicial.",
       recommendation:
         "Cada subárea tiene reglas y plazos propios. Una primera reunión permite orientar la vía más adecuada sin anticipar resultado.",
     };
@@ -270,6 +299,8 @@ function buildInicial(urgency: UrgencyLevel): LegalDiagnosticResult {
       "Correo o mensajes relevantes",
       "Contratos o convenios vinculados al conflicto",
     ],
+    documentationRequest:
+      "Con la información disponible no fue posible clasificar su caso con precisión. Para una evaluación inicial, envíenos cualquier resolución o carta de organismos públicos, una cronología de los hechos, correos o mensajes relevantes y contratos vinculados al conflicto.",
     recommendation:
       "Sin antecedentes suficientes en el texto, la categoría queda en evaluación inicial. Un abogado podrá orientar con precisión al revisar los documentos.",
   };

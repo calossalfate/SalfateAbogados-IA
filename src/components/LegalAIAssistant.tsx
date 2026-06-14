@@ -9,14 +9,17 @@ import {
   FileStack,
   ListChecks,
   AlertCircle,
+  ClipboardList,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import {
   diagnoseLegalCase,
+  DIAGNOSTIC_STORAGE_KEY,
   type LegalDiagnosticResult,
 } from "@/lib/legalAIDiagnostic";
 
-const ANALYSIS_MS = 1400;
+const ANALYSIS_MS = 1200;
 
 function urgencyStyles(u: string) {
   if (u === "Alto")
@@ -24,6 +27,17 @@ function urgencyStyles(u: string) {
   if (u === "Medio")
     return "bg-amber-500/15 text-amber-200 border-amber-500/30";
   return "bg-emerald-500/12 text-emerald-200 border-emerald-500/25";
+}
+
+function persistDiagnostic(result: LegalDiagnosticResult, userText: string) {
+  try {
+    sessionStorage.setItem(
+      DIAGNOSTIC_STORAGE_KEY,
+      JSON.stringify({ result, userText, savedAt: Date.now() })
+    );
+  } catch {
+    /* sessionStorage no disponible */
+  }
 }
 
 export function LegalAIAssistant() {
@@ -35,7 +49,9 @@ export function LegalAIAssistant() {
     setResult(null);
     setLoading(true);
     window.setTimeout(() => {
-      setResult(diagnoseLegalCase(text));
+      const diagnostic = diagnoseLegalCase(text);
+      setResult(diagnostic);
+      persistDiagnostic(diagnostic, text);
       setLoading(false);
     }, ANALYSIS_MS);
   }, [text]);
@@ -71,15 +87,15 @@ export function LegalAIAssistant() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-widest text-accent">
-              IA Legal · POC
+              Asistente legal inicial
             </p>
             <h2 className="mt-2 font-display text-3xl font-semibold text-ink sm:text-4xl">
-              Diagnóstico orientativo asistido
+              Diagnóstico orientativo de su caso
             </h2>
             <p className="mt-4 text-muted leading-relaxed">
-              Herramienta de demostración que clasifica su relato por palabras
-              clave. En una siguiente etapa se conectará a motor de IA y
-              backend seguro.
+              Describa su situación y reciba una clasificación preliminar, las
+              vías de acción posibles y la documentación que debe reunir para
+              una evaluación profesional.
             </p>
           </div>
           <div className="flex max-w-xl items-center gap-2 rounded-lg border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100/90 backdrop-blur-md">
@@ -115,7 +131,7 @@ export function LegalAIAssistant() {
               <button
                 type="button"
                 onClick={analyze}
-                disabled={loading}
+                disabled={loading || !text.trim()}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold text-petrol-300 transition hover:bg-accent-soft disabled:opacity-60"
               >
                 {loading ? (
@@ -131,7 +147,7 @@ export function LegalAIAssistant() {
                 )}
               </button>
               <p className="text-xs text-muted">
-                Sin envío a servidores externos en esta versión.
+                Sus datos no se comparten con terceros.
               </p>
             </div>
 
@@ -144,9 +160,9 @@ export function LegalAIAssistant() {
                 <div className="flex items-center gap-3 text-accent-soft">
                   <Loader2 className="h-5 w-5 shrink-0 animate-spin" />
                   <div>
-                    <p className="text-sm font-medium">Analizando…</p>
+                    <p className="text-sm font-medium">Analizando su caso…</p>
                     <p className="mt-1 text-xs text-muted">
-                      Clasificación local por palabras clave (simulación).
+                      Clasificando materia, urgencia y documentación requerida.
                     </p>
                   </div>
                 </div>
@@ -186,24 +202,38 @@ export function LegalAIAssistant() {
                   </ul>
                 </div>
 
-                <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+                <div className="rounded-xl border border-accent/25 bg-accent/5 p-5">
                   <h3 className="flex items-center gap-2 text-sm font-semibold text-accent-soft">
-                    <FileStack className="h-4 w-4" />
-                    Documentos recomendados
+                    <ClipboardList className="h-4 w-4" />
+                    Documentación que debe preparar
                   </h3>
-                  <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted">
+                  <p className="mt-3 text-sm leading-relaxed text-muted">
+                    {result.documentationRequest}
+                  </p>
+                  <ul className="mt-4 list-disc space-y-2 pl-5 text-sm text-muted">
                     {result.documents.map((d) => (
                       <li key={d}>{d}</li>
                     ))}
                   </ul>
                 </div>
 
-                <div className="rounded-xl border border-accent/20 bg-accent/5 p-5">
-                  <h3 className="text-sm font-semibold text-ink">
-                    Recomendación final
+                <div className="rounded-xl border border-white/10 bg-black/25 p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-semibold text-accent-soft">
+                    <FileStack className="h-4 w-4" />
+                    Recomendación
                   </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
                     {result.recommendation}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-accent/20 bg-accent/5 p-5">
+                  <h3 className="text-sm font-semibold text-ink">
+                    ¿Desea una revisión profesional?
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">
+                    Un abogado del estudio revisará su caso con la documentación
+                    indicada y le orientará sobre los próximos pasos.
                   </p>
                   <Link
                     href="#contacto"
@@ -219,34 +249,44 @@ export function LegalAIAssistant() {
           <aside className="relative z-10 space-y-4">
             <div className="glass rounded-2xl p-6 backdrop-blur-md">
               <h3 className="font-display text-lg font-semibold text-ink">
-                Arquitectura preparada
+                Cómo funciona
               </h3>
-              <ul className="mt-4 space-y-3 text-sm text-muted">
-                <li className="flex gap-2">
-                  <span className="text-accent">·</span>
-                  Endpoint de API de IA (pendiente)
+              <ol className="mt-4 space-y-3 text-sm text-muted">
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent">
+                    1
+                  </span>
+                  <span>Describa su situación con el mayor detalle posible.</span>
                 </li>
-                <li className="flex gap-2">
-                  <span className="text-accent">·</span>
-                  Orquestación vía n8n / webhooks
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent">
+                    2
+                  </span>
+                  <span>
+                    Reciba clasificación preliminar, vías de acción y lista de
+                    documentos requeridos.
+                  </span>
                 </li>
-                <li className="flex gap-2">
-                  <span className="text-accent">·</span>
-                  CRM, correo y almacenamiento de documentos
+                <li className="flex gap-3">
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/20 text-xs font-semibold text-accent">
+                    3
+                  </span>
+                  <span>
+                    Reúna la documentación indicada y solicite revisión
+                    profesional.
+                  </span>
                 </li>
-                <li className="flex gap-2">
-                  <span className="text-accent">·</span>
-                  Panel de clientes
-                </li>
-              </ul>
+              </ol>
             </div>
-            <div className="rounded-2xl border border-dashed border-white/15 bg-black/20 p-6 text-sm text-muted backdrop-blur-sm">
-              La función{" "}
-              <code className="rounded bg-white/10 px-1.5 py-0.5 text-xs text-accent-soft">
-                diagnoseLegalCase
-              </code>{" "}
-              en <code className="text-xs">src/lib/legalAIDiagnostic.ts</code>{" "}
-              puede sustituirse por una llamada a su API sin cambiar la UI.
+            <div className="rounded-2xl border border-white/10 bg-black/20 p-6 text-sm text-muted backdrop-blur-sm">
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+                <p>
+                  El diagnóstico se procesa de forma local en su navegador. No
+                  sustituye una consulta legal ni genera opinión jurídica
+                  vinculante.
+                </p>
+              </div>
             </div>
           </aside>
         </div>

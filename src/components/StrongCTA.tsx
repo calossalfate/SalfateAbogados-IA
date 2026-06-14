@@ -59,7 +59,7 @@ export function StrongCTA() {
             className="inline-flex items-center justify-center gap-2 rounded-full bg-accent px-8 py-3.5 text-sm font-semibold text-petrol-300 shadow-lg shadow-black/25 transition hover:bg-accent-soft"
           >
             <Sparkles className="h-4 w-4" />
-            Diagnóstico IA
+            Diagnóstico legal
           </Link>
         </div>
       </div>

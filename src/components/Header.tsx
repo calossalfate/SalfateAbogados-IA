@@ -7,7 +7,7 @@ import { Menu, X } from "lucide-react";
 const nav = [
   { href: "#inicio", label: "Inicio" },
   { href: "#especialidades", label: "Especialidades" },
-  { href: "#ia-legal", label: "IA Legal" },
+  { href: "#ia-legal", label: "Diagnóstico legal" },
   { href: "#metodologia", label: "Metodología" },
   { href: "#faq", label: "Preguntas frecuentes" },
   { href: "#contacto", label: "Contacto" },

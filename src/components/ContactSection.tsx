@@ -1,7 +1,12 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { Mail, MessageCircle, MapPin, Send, CheckCircle2 } from "lucide-react";
+import {
+  DIAGNOSTIC_STORAGE_KEY,
+  categoryToContactCaseType,
+  type LegalDiagnosticResult,
+} from "@/lib/legalAIDiagnostic";
 
 const WA = "https://wa.me/56991545512";
 const MAIL = "mailto:info@salfateabogados.cl";
@@ -17,14 +22,53 @@ const caseTypes = [
   "Otro / a definir",
 ];
 
+type StoredDiagnostic = {
+  result: LegalDiagnosticResult;
+  userText: string;
+};
+
+function buildMessageFromDiagnostic(data: StoredDiagnostic): string {
+  const { result, userText } = data;
+  const docs = result.documents.map((d) => `• ${d}`).join("\n");
+  return [
+    "Solicito revisión profesional tras el diagnóstico orientativo.",
+    "",
+    `Categoría detectada: ${result.categoryLabel}`,
+    `Urgencia: ${result.urgency}`,
+    "",
+    "Relato:",
+    userText.trim(),
+    "",
+    "Documentación que tengo disponible o puedo reunir:",
+    docs,
+  ].join("\n");
+}
+
 export function ContactSection() {
   const [toast, setToast] = useState(false);
+  const [caseType, setCaseType] = useState("");
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem(DIAGNOSTIC_STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw) as StoredDiagnostic;
+      if (!data?.result) return;
+      setCaseType(categoryToContactCaseType[data.result.categoryId] ?? "");
+      setMessage(buildMessageFromDiagnostic(data));
+    } catch {
+      /* datos no disponibles */
+    }
+  }, []);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setToast(true);
     window.setTimeout(() => setToast(false), 5000);
     (e.target as HTMLFormElement).reset();
+    setCaseType("");
+    setMessage("");
   }
 
   return (
@@ -39,9 +83,9 @@ export function ContactSection() {
               Contacto
             </h2>
             <p className="mt-4 text-muted leading-relaxed">
-              Cuéntenos brevemente su caso. En esta versión el formulario
-              registra la solicitud de forma simulada; más adelante se
-              conectará a correo, CRM o automatización.
+              Cuéntenos brevemente su caso. Si completó el diagnóstico orientativo,
+              el formulario se completará con la información relevante para
+              agilizar su evaluación.
             </p>
 
             <ul className="mt-10 space-y-5 text-sm">
@@ -128,8 +172,9 @@ export function ContactSection() {
                 <select
                   required
                   name="caseType"
+                  value={caseType}
+                  onChange={(e) => setCaseType(e.target.value)}
                   className="mt-1.5 w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-ink focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
-                  defaultValue=""
                 >
                   <option value="" disabled>
                     Seleccione…
@@ -147,6 +192,8 @@ export function ContactSection() {
                   required
                   name="message"
                   rows={4}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
                   className="mt-1.5 w-full resize-y rounded-lg border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-ink focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
                 />
               </label>
@@ -167,8 +214,7 @@ export function ContactSection() {
               >
                 <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-400" />
                 <span>
-                  Solicitud registrada. En la siguiente etapa conectaremos este
-                  formulario a correo/CRM.
+                  Solicitud recibida. Nos comunicaremos con usted a la brevedad.
                 </span>
               </div>
             )}

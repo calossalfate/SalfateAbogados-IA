@@ -82,7 +82,7 @@ export function Hero() {
               href="#ia-legal"
               className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 px-6 py-3.5 text-sm font-medium text-white shadow-md shadow-black/25 backdrop-blur-sm transition hover:border-accent/60 hover:bg-white/15 hover:text-amber-50"
             >
-              Probar diagnóstico IA
+              Iniciar diagnóstico legal
             </Link>
           </div>
         </div>
