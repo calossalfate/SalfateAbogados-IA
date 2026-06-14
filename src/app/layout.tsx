@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import { FloatingLegalChat } from "@/components/FloatingLegalChat";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -39,6 +40,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${cormorant.variable} font-sans bg-graphite text-ink min-h-screen`}
       >
         {children}
+        <FloatingLegalChat />
       </body>
     </html>
   );
