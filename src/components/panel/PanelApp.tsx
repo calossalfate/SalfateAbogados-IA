@@ -1272,9 +1272,9 @@ export function PanelApp() {
 
           {showPreview ? (
             <aside className="space-y-3 xl:sticky xl:top-20 xl:self-start">
-              <LivePreview content={content} />
+              <LivePreview content={content} section={section} />
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-xs text-slate-400">
-                Vista previa orientativa del inicio y contacto. Al guardar, la
+                La vista previa cambia según la sección del menú. Al guardar, la
                 web real se actualiza en 1–2 minutos.
               </div>
             </aside>
@@ -1348,37 +1348,259 @@ function Dashboard({
   );
 }
 
-function LivePreview({ content }: { content: EditableContent }) {
+function LivePreview({
+  content,
+  section,
+}: {
+  content: EditableContent;
+  section: SectionId;
+}) {
+  const label =
+    NAV.find((n) => n.id === section)?.label ||
+    (section === "resumen" ? "Controlador" : "Sección");
+
   return (
     <div className="overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-cyan-950 shadow-xl">
       <div className="border-b border-white/10 px-3 py-2 text-[10px] uppercase tracking-wider text-slate-500">
-        Preview · inicio
+        Preview · {label}
       </div>
-      <div className="space-y-3 p-4">
-        <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
-          {content.hero.badge}
-        </p>
-        <h2 className="font-serif text-xl leading-snug text-white">
-          {content.hero.title}
-        </h2>
-        <p className="text-xs leading-relaxed text-slate-400">
-          {content.hero.subtitle}
-        </p>
-        <div className="flex flex-wrap gap-2 pt-1">
-          <span className="rounded-lg bg-cyan-400 px-2.5 py-1 text-[11px] font-semibold text-slate-950">
-            {content.hero.ctaPrimary}
-          </span>
-          <span className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-slate-300">
-            {content.hero.ctaSecondary}
-          </span>
-        </div>
-        <div className="mt-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
-          <p className="text-[11px] text-slate-500">Contacto</p>
-          <p className="text-sm text-slate-200">{content.contact.email}</p>
-          <p className="text-sm text-slate-200">{content.contact.phoneDisplay}</p>
-          <p className="text-xs text-slate-500">{content.contact.coverage}</p>
-        </div>
+      <div className="max-h-[70vh] space-y-3 overflow-y-auto p-4">
+        {section === "contacto" || section === "resumen" ? (
+          <PreviewBlock title={content.siteName}>
+            <p className="text-sm text-slate-200">{content.contact.email}</p>
+            <p className="text-sm text-slate-200">{content.contact.phoneDisplay}</p>
+            <p className="text-xs text-slate-400">
+              WhatsApp: {content.contact.whatsappNumber}
+            </p>
+            <p className="text-xs text-slate-500">{content.contact.coverage}</p>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "inicio" || section === "resumen" ? (
+          <div className="space-y-3">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-cyan-300/80">
+              {content.hero.badge}
+            </p>
+            <h2 className="font-serif text-xl leading-snug text-white">
+              {content.hero.title}
+            </h2>
+            <p className="text-xs leading-relaxed text-slate-400">
+              {content.hero.subtitle}
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="rounded-lg bg-cyan-400 px-2.5 py-1 text-[11px] font-semibold text-slate-950">
+                {content.hero.ctaPrimary}
+              </span>
+              <span className="rounded-lg border border-white/15 px-2.5 py-1 text-[11px] text-slate-300">
+                {content.hero.ctaSecondary}
+              </span>
+            </div>
+            <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+              <p className="text-xs font-medium text-slate-300">
+                {content.hero.panelTitle} · {content.hero.panelStatus}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-500">
+                {content.hero.panelDisclaimer}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1">
+                {content.hero.indicators.slice(0, 5).map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-300"
+                  >
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {section === "audiencia" ? (
+          <PreviewBlock title={content.audience.title}>
+            <p className="text-xs text-slate-400">{content.audience.subtitle}</p>
+            <div className="mt-2 space-y-2">
+              {content.audience.blocks.map((b) => (
+                <div
+                  key={b.title}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-2"
+                >
+                  <p className="text-sm font-medium text-white">{b.title}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">{b.body}</p>
+                </div>
+              ))}
+            </div>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "especialidades" ? (
+          <PreviewBlock title={content.practiceAreas.title}>
+            <p className="text-[11px] uppercase tracking-wider text-cyan-300/70">
+              {content.practiceAreas.eyebrow}
+            </p>
+            <p className="text-xs text-slate-400">{content.practiceAreas.subtitle}</p>
+            <div className="mt-2 space-y-2">
+              {content.practiceAreas.areas.slice(0, 6).map((a) => (
+                <div
+                  key={a.title}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-2"
+                >
+                  <p className="text-sm font-medium text-white">{a.title}</p>
+                  <p className="mt-1 line-clamp-3 text-[11px] text-slate-400">
+                    {a.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <p className="pt-1 text-[11px] text-cyan-200">
+              {content.practiceAreas.cta}
+            </p>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "metodologia" ? (
+          <PreviewBlock title={content.methodology.title}>
+            <p className="text-xs text-slate-400">{content.methodology.subtitle}</p>
+            <ol className="mt-2 space-y-2">
+              {content.methodology.steps.map((s) => (
+                <li
+                  key={s.step}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-2"
+                >
+                  <p className="text-[11px] text-cyan-300/80">{s.step}</p>
+                  <p className="text-sm font-medium text-white">{s.title}</p>
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    {s.description}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "faq" ? (
+          <PreviewBlock title={content.faq.title}>
+            <p className="text-xs text-slate-400">{content.faq.subtitle}</p>
+            <div className="mt-2 space-y-2">
+              {content.faq.items.slice(0, 5).map((item) => (
+                <div
+                  key={item.question}
+                  className="rounded-lg border border-white/10 bg-white/[0.03] p-2"
+                >
+                  <p className="text-sm font-medium text-white">{item.question}</p>
+                  <p className="mt-1 line-clamp-3 text-[11px] text-slate-400">
+                    {item.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "formulario" ? (
+          <PreviewBlock title={content.contactSection.title}>
+            <p className="text-xs text-slate-400">
+              {content.contactSection.description}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {content.contactSection.caseTypes.slice(0, 6).map((t) => (
+                <span
+                  key={t}
+                  className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-slate-300"
+                >
+                  {t}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 text-[11px] text-emerald-300">
+              Éxito: {content.contactSection.successMessage}
+            </p>
+            <p className="text-[11px] text-rose-300">
+              Error: {content.contactSection.errorMessage}
+            </p>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "chat" ? (
+          <PreviewBlock title={`Chat · ${content.chat.assistantName}`}>
+            <p className="text-xs text-slate-400">{content.chat.subtitle}</p>
+            <div className="mt-2 space-y-1">
+              {content.chat.teaserMessages.slice(0, 4).map((m) => (
+                <p
+                  key={m}
+                  className="rounded-lg bg-cyan-400/10 px-2 py-1 text-[11px] text-cyan-50"
+                >
+                  {m}
+                </p>
+              ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {content.chat.welcomeQuickReplies.map((r) => (
+                <span
+                  key={r}
+                  className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] text-slate-300"
+                >
+                  {r}
+                </span>
+              ))}
+            </div>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "seo" ? (
+          <PreviewBlock title="Resultado en Google">
+            <p className="text-sm text-sky-300">{content.seo.title}</p>
+            <p className="text-[11px] text-emerald-400/80">
+              https://www.salfateabogados.cl
+            </p>
+            <p className="mt-1 text-xs text-slate-400">
+              {content.seo.description}
+            </p>
+            <p className="mt-2 text-[11px] text-slate-500">
+              Tema: {content.theme}
+            </p>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "pie" ? (
+          <PreviewBlock title="CTA y pie">
+            <p className="font-serif text-lg text-white">
+              {content.strongCta.title}
+            </p>
+            <p className="text-xs text-slate-400">{content.strongCta.subtitle}</p>
+            <div className="mt-3 border-t border-white/10 pt-3">
+              <p className="text-xs text-slate-300">{content.footer.tagline}</p>
+              <p className="mt-1 text-[11px] text-slate-500">
+                {content.footer.disclaimer}
+              </p>
+            </div>
+          </PreviewBlock>
+        ) : null}
+
+        {section === "asistente" ? (
+          <PreviewBlock title="Copiloto del panel">
+            <p className="text-xs text-slate-400">
+              Aquí puedes pedir ayuda o reportar errores a Carlos. El preview de
+              contenido aparece al elegir otra sección del menú.
+            </p>
+          </PreviewBlock>
+        ) : null}
       </div>
+    </div>
+  );
+}
+
+function PreviewBlock({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <h2 className="font-serif text-lg leading-snug text-white">{title}</h2>
+      {children}
     </div>
   );
 }
