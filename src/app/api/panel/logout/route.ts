@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { PANEL_COOKIE } from "@/lib/panel/auth";
+import { PANEL_COOKIE, PANEL_COOKIE_OPTIONS } from "@/lib/panel/auth";
 
 export const runtime = "nodejs";
 
@@ -8,10 +8,7 @@ export async function POST() {
   res.cookies.set({
     name: PANEL_COOKIE,
     value: "",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
+    ...PANEL_COOKIE_OPTIONS,
     maxAge: 0,
   });
   return res;

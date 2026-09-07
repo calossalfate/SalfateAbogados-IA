@@ -6,6 +6,11 @@ import {
 } from "@/lib/content/editable";
 import { isPanelAuthenticated, isPanelConfigured } from "@/lib/panel/auth";
 import { canPersistEditable, saveEditableContent } from "@/lib/panel/persist";
+import {
+  assertJsonContentType,
+  assertSameOrigin,
+  readJsonLimited,
+} from "@/lib/panel/requestGuard";
 
 export const runtime = "nodejs";
 
@@ -32,6 +37,11 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const originError = assertSameOrigin(request);
+  if (originError) return originError;
+  const typeError = assertJsonContentType(request);
+  if (typeError) return typeError;
+
   if (!isPanelConfigured()) {
     return NextResponse.json(
       { error: "Panel no configurado (falta ADMIN_PASSWORD)." },
@@ -43,13 +53,13 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
-  }
+  const parsed = await readJsonLimited<{ content?: unknown } | unknown>(
+    request,
+    350_000
+  );
+  if (parsed.error) return parsed.error;
 
+  const body = parsed.data;
   const content = sanitizeEditable(
     (body as { content?: unknown })?.content ?? body
   );

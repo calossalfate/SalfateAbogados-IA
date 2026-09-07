@@ -1,13 +1,25 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { isPanelAuthenticated, isPanelConfigured } from "@/lib/panel/auth";
+import {
+  assertJsonContentType,
+  assertSameOrigin,
+  readJsonLimited,
+} from "@/lib/panel/requestGuard";
+import { sanitizeEmailHeader } from "@/lib/security/validateContact";
 
 export const runtime = "nodejs";
 
 const SUPPORT_TO =
   process.env.PANEL_SUPPORT_EMAIL || "carlos.salfate@chileatiende.cl";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function POST(request: Request) {
+  const originError = assertSameOrigin(request);
+  if (originError) return originError;
+  const typeError = assertJsonContentType(request);
+  if (typeError) return typeError;
+
   if (!isPanelConfigured()) {
     return NextResponse.json({ error: "Panel no configurado." }, { status: 503 });
   }
@@ -15,26 +27,28 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  let body: {
+  const parsed = await readJsonLimited<{
     type?: string;
     message?: string;
     page?: string;
     replyEmail?: string;
-  };
-  try {
-    body = await request.json();
-  } catch {
-    return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
-  }
+  }>(request, 20_000);
+  if (parsed.error) return parsed.error;
 
-  const type = (body.type || "ayuda").trim();
-  const message = (body.message || "").trim();
-  const page = (body.page || "/panel").trim();
-  const replyEmail = (body.replyEmail || "").trim();
+  const type = sanitizeEmailHeader(parsed.data?.type || "ayuda", 40);
+  const message = (parsed.data?.message || "").trim().slice(0, 4000);
+  const page = sanitizeEmailHeader(parsed.data?.page || "/panel", 60);
+  const replyEmail = (parsed.data?.replyEmail || "").trim().slice(0, 254);
 
   if (message.length < 10) {
     return NextResponse.json(
       { error: "Describe el problema o la necesidad (mínimo 10 caracteres)." },
+      { status: 400 }
+    );
+  }
+  if (replyEmail && !EMAIL_RE.test(replyEmail)) {
+    return NextResponse.json(
+      { error: "El correo de respuesta no es válido." },
       { status: 400 }
     );
   }
@@ -45,7 +59,11 @@ export async function POST(request: Request) {
     : null;
 
   const safe = (v: string) =>
-    v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    v
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
 
   const html = `
     <h2>Solicitud desde el panel Salfate</h2>
@@ -81,7 +99,9 @@ export async function POST(request: Request) {
     console.error("[panel/help]", error);
     return NextResponse.json(
       {
-        error: "No se pudo notificar a Carlos. Intenta de nuevo o escribe a " + SUPPORT_TO,
+        error:
+          "No se pudo notificar a Carlos. Intenta de nuevo o escribe a " +
+          SUPPORT_TO,
         supportEmail: SUPPORT_TO,
       },
       { status: 502 }

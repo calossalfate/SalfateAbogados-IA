@@ -3,12 +3,23 @@ import {
   createSessionToken,
   isPanelConfigured,
   PANEL_COOKIE,
+  PANEL_COOKIE_OPTIONS,
   verifyPassword,
 } from "@/lib/panel/auth";
+import {
+  assertJsonContentType,
+  assertSameOrigin,
+  readJsonLimited,
+} from "@/lib/panel/requestGuard";
 
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
+  const originError = assertSameOrigin(request);
+  if (originError) return originError;
+  const typeError = assertJsonContentType(request);
+  if (typeError) return typeError;
+
   if (!isPanelConfigured()) {
     return NextResponse.json(
       {
@@ -19,15 +30,12 @@ export async function POST(request: Request) {
     );
   }
 
-  let password = "";
-  try {
-    const body = (await request.json()) as { password?: string };
-    password = body.password?.trim() || "";
-  } catch {
-    return NextResponse.json({ error: "Solicitud inválida." }, { status: 400 });
-  }
+  const parsed = await readJsonLimited<{ password?: string }>(request, 2_000);
+  if (parsed.error) return parsed.error;
+  const password = parsed.data?.password?.trim() || "";
 
   if (!verifyPassword(password)) {
+    // Misma forma de respuesta para no filtrar detalles
     return NextResponse.json(
       { error: "Contraseña incorrecta." },
       { status: 401 }
@@ -39,11 +47,7 @@ export async function POST(request: Request) {
   res.cookies.set({
     name: PANEL_COOKIE,
     value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: 12 * 60 * 60,
+    ...PANEL_COOKIE_OPTIONS,
   });
   return res;
 }

@@ -20,12 +20,8 @@ function getBranch(): string {
 }
 
 function getToken(): string | null {
-  return (
-    process.env.PANEL_GITHUB_TOKEN ||
-    process.env.GITHUB_TOKEN ||
-    process.env.GH_TOKEN ||
-    null
-  );
+  // Solo el token dedicado del panel (no reutilizar GITHUB_TOKEN del entorno).
+  return process.env.PANEL_GITHUB_TOKEN?.trim() || null;
 }
 
 export function canPersistEditable(): boolean {
