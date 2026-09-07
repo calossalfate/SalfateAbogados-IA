@@ -1,67 +1,55 @@
-# Panel de administración — Salfate Abogados
+# Panel de edición sencillo — Salfate Abogados
 
-Tu hermano puede editar textos, contacto, colores y más **sin programar**.
+Tu hermano puede editar **correo, teléfonos y textos** sin programar.
 
 ## Acceso
 
-1. Abre **https://[dominio-del-sitio]/admin**
-2. Inicia sesión con la cuenta de Google (o email) autorizada en Sanity
-3. Edita **Contenido del sitio web**
-4. Pulsa **Publish** (Publicar)
-
-Los cambios aparecen en la web en aproximadamente 1 minuto.
+1. Abre **https://www.salfateabogados.cl/panel**
+2. Ingresa la contraseña del panel
+3. Edita las pestañas **Contacto**, **Textos** o **Pie y CTA**
+4. Pulsa **Guardar cambios**
+5. Espera 1–2 minutos y revisa la web (Vercel vuelve a publicar solo)
 
 ## Qué puede cambiar
 
-| Sección | Ejemplos |
-|---------|----------|
-| **Contacto** | Email, teléfono, WhatsApp, cobertura |
-| **SEO** | Título en Google, descripción |
-| **Apariencia** | Tema: Clásico dorado / Azul corporativo / Conservador |
-| **Inicio / Hero** | Título principal, subtítulo, botones |
-| **Especialidades** | Agregar, quitar o editar áreas de práctica |
-| **FAQ** | Preguntas y respuestas |
-| **Formulario** | Tipos de caso, mensajes de éxito/error |
-| **Chat** | Nombre del asistente, notificaciones, botones rápidos |
-| **Pie de página** | Descripción y aviso legal |
+| Pestaña | Campos |
+|---------|--------|
+| **Contacto** | Nombre del estudio, correo, teléfono, WhatsApp, cobertura |
+| **Textos** | Título y subtítulo del inicio, botones, textos de la sección contacto |
+| **Pie y CTA** | Llamado a la acción y textos del pie |
 
-## Configuración inicial (una sola vez)
+## Configuración inicial (una sola vez, en Vercel)
 
-### 1. Crear proyecto Sanity
+En el proyecto de Vercel → **Settings → Environment Variables**, agrega:
 
-1. Ve a [sanity.io/manage](https://www.sanity.io/manage)
-2. Crea proyecto → nombre: `Salfate Abogados`
-3. Copia el **Project ID**
-4. En Vercel (o `.env.local`), agrega:
-   - `NEXT_PUBLIC_SANITY_PROJECT_ID=...`
-   - `NEXT_PUBLIC_SANITY_DATASET=production`
+```
+ADMIN_PASSWORD=una-clave-segura
+PANEL_GITHUB_TOKEN=github_pat_xxxx
+PANEL_GITHUB_REPO=calossalfate/SalfateAbogados-IA
+PANEL_GITHUB_BRANCH=main
+```
 
-### 2. Invitar al owner
+### Cómo crear el token de GitHub
 
-En Sanity → **Project → Members → Invite**  
-Agrega el email de tu hermano como **Editor** o **Administrator**.
+1. GitHub → Settings → Developer settings → **Personal access tokens** (fine-grained o classic)
+2. Permiso de **Contents: Read and write** sobre el repo `SalfateAbogados-IA`
+3. Copia el token en `PANEL_GITHUB_TOKEN`
 
-### 3. Crear el documento inicial
+Luego **redeploy** el proyecto en Vercel.
 
-1. Entra a `/admin`
-2. Abre **Sitio web → Contenido del sitio web**
-3. Si está vacío, completa los campos (puedes copiar los textos actuales de la web)
-4. **Publish**
+Opcional (recomendado para el formulario de contacto):
 
-### 4. Formulario de contacto (Resend)
+```
+CONTACT_TO_EMAIL=contactoabogado@salfateabogados.cl
+```
 
-1. Cuenta en [resend.com](https://resend.com)
-2. Verifica el dominio `salfateabogados.cl` (o usa `onboarding@resend.dev` para pruebas)
-3. Variables en Vercel:
-   - `RESEND_API_KEY`
-   - `CONTACT_TO_EMAIL=contactoabogado@salfateabogados.cl`
-   - `CONTACT_FROM_EMAIL=...`
+## Notas
 
-## Si Sanity no está configurado
+- El panel **no** aparece en Google (`/panel` está bloqueado en robots).
+- La sesión dura 12 horas.
+- Sanity (`/admin`) sigue disponible para edición avanzada si está configurado.
+- Si no configuras `PANEL_GITHUB_TOKEN`, el panel puede iniciar sesión pero **no podrá guardar** en producción.
 
-El sitio sigue funcionando con el contenido original del código. No hay error visible para los visitantes.
+## Soporte
 
-## Soporte técnico
-
-Cambios de diseño avanzados, nuevas secciones o lógica del bot requieren desarrollo.  
-El panel cubre el **contenido del día a día** que un bufete necesita actualizar solo.
+Si olvida la contraseña, cámbiala en Vercel (`ADMIN_PASSWORD`) y vuelve a desplegar.

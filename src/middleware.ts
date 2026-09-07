@@ -4,6 +4,8 @@ import { checkRateLimit } from "@/lib/security/rateLimit";
 
 const CONTACT_RATE_LIMIT = 5;
 const CONTACT_WINDOW_MS = 15 * 60 * 1000;
+const PANEL_LOGIN_RATE_LIMIT = 10;
+const PANEL_LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 function getClientIp(request: NextRequest): string {
   return (
@@ -15,9 +17,9 @@ function getClientIp(request: NextRequest): string {
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const ip = getClientIp(request);
 
   if (pathname === "/api/contact" && request.method === "POST") {
-    const ip = getClientIp(request);
     const result = checkRateLimit(
       `contact:${ip}`,
       CONTACT_RATE_LIMIT,
@@ -41,9 +43,29 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  if (pathname === "/api/panel/login" && request.method === "POST") {
+    const result = checkRateLimit(
+      `panel-login:${ip}`,
+      PANEL_LOGIN_RATE_LIMIT,
+      PANEL_LOGIN_WINDOW_MS
+    );
+    if (!result.allowed) {
+      const retryAfter = Math.ceil((result.resetAt - Date.now()) / 1000);
+      return NextResponse.json(
+        { error: "Demasiados intentos. Espere unos minutos." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(Math.max(retryAfter, 1)),
+          },
+        }
+      );
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/api/contact"],
+  matcher: ["/api/contact", "/api/panel/login"],
 };

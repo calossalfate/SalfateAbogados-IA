@@ -1,0 +1,29 @@
+{
+  "siteName": "Salfate Abogados",
+  "contact": {
+    "email": "contactoabogado@salfateabogados.cl",
+    "phone": "+56991545512",
+    "phoneDisplay": "+56 9 9154 5512",
+    "whatsappNumber": "56991545512",
+    "coverage": "Atención en todo Chile"
+  },
+  "hero": {
+    "badge": "Estudio jurídico · Chile",
+    "title": "Defensa y asesoría legal estratégica frente al Estado",
+    "subtitle": "Especialistas en Derecho Público, Derecho Administrativo, compras públicas, sumarios, litigación y asesoría integral para personas, empresas, funcionarios e instituciones en todo Chile.",
+    "ctaPrimary": "Solicitar evaluación legal",
+    "ctaSecondary": "Iniciar diagnóstico legal"
+  },
+  "contactSection": {
+    "title": "Conversemos sobre su caso",
+    "description": "Cuéntenos su situación. Evaluamos viabilidad, riesgos y próximos pasos con criterio técnico y confidencialidad."
+  },
+  "strongCta": {
+    "title": "¿Necesita orientación legal frente al Estado?",
+    "subtitle": "Escríbanos o agende una primera conversación. Revisamos su caso con enfoque práctico y estratégico."
+  },
+  "footer": {
+    "tagline": "Estudio jurídico enfocado en Derecho Público y Administrativo, con atención en todo Chile.",
+    "disclaimer": "La información del sitio es orientativa y no constituye asesoría legal."
+  }
+}
