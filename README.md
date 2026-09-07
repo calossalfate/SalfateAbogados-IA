@@ -12,7 +12,7 @@ Landing profesional para el estudio jurídico **Salfate Abogados** (Chile). Incl
 |---------|---------|
 | **Cliente** | Salfate Abogados — Derecho Público y Administrativo |
 | **Stack** | Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS |
-| **CMS** | Sanity v3 embebido en `/admin` |
+| **CMS** | Panel sencillo `/panel` (+ Sanity opcional en `/admin`) |
 | **Email** | Resend (`/api/contact`) |
 | **Chat** | Bot local basado en reglas (sin API de IA externa) |
 | **Deploy** | Vercel (recomendado) |
@@ -195,9 +195,9 @@ Campos editables: contacto, SEO, tema, hero, especialidades, FAQ, formulario, ch
 
 ## Panel de administración
 
-- URL: `/admin`
-- Auth: cuenta Google/email invitada en Sanity
-- Guía detallada: `docs/PANEL-ADMIN.md`
+- URL sencilla (recomendada): `/panel` — correo, teléfonos y textos
+- URL avanzada (Sanity): `/admin`
+- Guía: `docs/PANEL-ADMIN.md`
 
 ---
 
