@@ -61,18 +61,51 @@ export function sanitizeEditable(input: unknown): EditableContent | null {
     ? (raw.theme as ThemePreset)
     : base.theme;
 
+  // Límites anti-abuso: evita payloads enormes que reescriban el repo.
+  base.practiceAreas.areas = base.practiceAreas.areas.slice(0, 40).map((a) => ({
+    icon: clip(a.icon, 40),
+    title: clip(a.title, 120),
+    description: clip(a.description, 800),
+  }));
+  base.faq.items = base.faq.items.slice(0, 40).map((i) => ({
+    question: clip(i.question, 200),
+    answer: clip(i.answer, 2000),
+  }));
+  base.hero.indicators = base.hero.indicators.slice(0, 12).map((v) => clip(v, 60));
+  base.seo.keywords = base.seo.keywords.slice(0, 30).map((v) => clip(v, 60));
+  base.contactSection.caseTypes = base.contactSection.caseTypes
+    .slice(0, 30)
+    .map((v) => clip(v, 80));
+  base.chat.teaserMessages = base.chat.teaserMessages
+    .slice(0, 20)
+    .map((v) => clip(v, 120));
+  base.chat.welcomeQuickReplies = base.chat.welcomeQuickReplies
+    .slice(0, 12)
+    .map((v) => clip(v, 60));
+
   return {
     ...base,
     theme,
     contact: {
       ...base.contact,
-      email,
-      phone: str(contact.phone) || `+${whatsappNumber}`,
-      phoneDisplay,
-      whatsappNumber,
-      coverage: str(contact.coverage) || base.contact.coverage,
+      email: clip(email, 254),
+      phone: clip(str(contact.phone) || `+${whatsappNumber}`, 30),
+      phoneDisplay: clip(phoneDisplay, 40),
+      whatsappNumber: clip(whatsappNumber, 20),
+      coverage: clip(str(contact.coverage) || base.contact.coverage, 120),
     },
-    siteName: str(raw.siteName) || base.siteName,
+    siteName: clip(str(raw.siteName) || base.siteName, 80),
+    hero: {
+      ...base.hero,
+      badge: clip(base.hero.badge, 80),
+      title: clip(base.hero.title, 220),
+      subtitle: clip(base.hero.subtitle, 800),
+      ctaPrimary: clip(base.hero.ctaPrimary, 80),
+      ctaSecondary: clip(base.hero.ctaSecondary, 80),
+      panelTitle: clip(base.hero.panelTitle, 80),
+      panelStatus: clip(base.hero.panelStatus, 40),
+      panelDisclaimer: clip(base.hero.panelDisclaimer, 240),
+    },
     updatedAt: new Date().toISOString(),
   };
 }
@@ -119,4 +152,8 @@ function asObject(value: unknown): Record<string, unknown> | null {
 
 function str(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function clip(value: string, max: number): string {
+  return value.trim().slice(0, max);
 }

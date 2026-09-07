@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { isPanelAuthenticated, isPanelConfigured } from "@/lib/panel/auth";
+import {
+  assertJsonContentType,
+  assertSameOrigin,
+  readJsonLimited,
+} from "@/lib/panel/requestGuard";
 
 export const runtime = "nodejs";
 
@@ -13,6 +18,11 @@ type LTMatch = {
 };
 
 export async function POST(request: Request) {
+  const originError = assertSameOrigin(request);
+  if (originError) return originError;
+  const typeError = assertJsonContentType(request);
+  if (typeError) return typeError;
+
   if (!isPanelConfigured()) {
     return NextResponse.json({ error: "Panel no configurado." }, { status: 503 });
   }
@@ -20,20 +30,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
-  let text = "";
-  try {
-    const body = (await request.json()) as { text?: string };
-    text = (body.text || "").trim();
-  } catch {
-    return NextResponse.json({ error: "JSON inválido." }, { status: 400 });
-  }
+  const parsed = await readJsonLimited<{ text?: string }>(request, 40_000);
+  if (parsed.error) return parsed.error;
+
+  const text = (parsed.data?.text || "").trim();
 
   if (!text) {
-    return NextResponse.json({ matches: [], message: "No hay texto para revisar." });
+    return NextResponse.json({
+      matches: [],
+      message: "No hay texto para revisar.",
+    });
   }
   if (text.length > 8000) {
     return NextResponse.json(
-      { error: "El texto es muy largo. Revisa por secciones (máx. 8000 caracteres)." },
+      {
+        error:
+          "El texto es muy largo. Revisa por secciones (máx. 8000 caracteres).",
+      },
       { status: 400 }
     );
   }
