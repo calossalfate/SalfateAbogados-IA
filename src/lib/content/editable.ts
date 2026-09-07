@@ -1,26 +1,25 @@
-import type { SiteContent } from "./types";
+import type { SiteContent, ThemePreset } from "./types";
+import { defaultSiteContent } from "./defaults";
+import { mergeSiteContent } from "./merge";
 import editableJson from "@/data/editable-content.json";
 
-/** Campos que el panel sencillo puede editar. */
-export type EditableContent = {
-  siteName: string;
-  contact: SiteContent["contact"];
-  hero: Pick<
-    SiteContent["hero"],
-    "badge" | "title" | "subtitle" | "ctaPrimary" | "ctaSecondary"
-  >;
-  contactSection: Pick<
-    SiteContent["contactSection"],
-    "title" | "description"
-  >;
-  strongCta: SiteContent["strongCta"];
-  footer: SiteContent["footer"];
+/** Contenido completo editable desde el panel + marca de tiempo. */
+export type EditableContent = SiteContent & {
+  updatedAt?: string;
 };
 
 export const editableContentFilePath = "src/data/editable-content.json";
 
 export function getEditableFromModule(): EditableContent {
-  return editableJson as EditableContent;
+  const merged = mergeSiteContent(
+    defaultSiteContent,
+    editableJson as Partial<SiteContent>
+  );
+  const updatedAt =
+    typeof (editableJson as { updatedAt?: unknown }).updatedAt === "string"
+      ? (editableJson as { updatedAt: string }).updatedAt
+      : undefined;
+  return { ...merged, updatedAt };
 }
 
 export function editableToPartial(
@@ -29,9 +28,16 @@ export function editableToPartial(
   return {
     siteName: editable.siteName,
     contact: editable.contact,
-    hero: editable.hero as SiteContent["hero"],
-    contactSection: editable.contactSection as SiteContent["contactSection"],
+    seo: editable.seo,
+    theme: editable.theme,
+    hero: editable.hero,
+    audience: editable.audience,
+    practiceAreas: editable.practiceAreas,
+    methodology: editable.methodology,
+    faq: editable.faq,
+    contactSection: editable.contactSection,
     strongCta: editable.strongCta,
+    chat: editable.chat,
     footer: editable.footer,
   };
 }
@@ -39,52 +45,70 @@ export function editableToPartial(
 export function sanitizeEditable(input: unknown): EditableContent | null {
   if (!input || typeof input !== "object") return null;
   const raw = input as Record<string, unknown>;
-  const contact = asObject(raw.contact);
-  const hero = asObject(raw.hero);
-  const contactSection = asObject(raw.contactSection);
-  const strongCta = asObject(raw.strongCta);
-  const footer = asObject(raw.footer);
 
-  if (!contact || !hero || !contactSection || !strongCta || !footer) {
-    return null;
-  }
+  const contact = asObject(raw.contact);
+  if (!contact) return null;
 
   const email = str(contact.email);
-  const phone = str(contact.phone);
   const phoneDisplay = str(contact.phoneDisplay);
   const whatsappNumber = str(contact.whatsappNumber).replace(/\D/g, "");
-  const coverage = str(contact.coverage);
-
   if (!email || !phoneDisplay || !whatsappNumber) return null;
 
+  const base = mergeSiteContent(defaultSiteContent, raw as Partial<SiteContent>);
+
+  const theme = (["classic", "corporate-blue", "conservative"] as ThemePreset[])
+    .includes(raw.theme as ThemePreset)
+    ? (raw.theme as ThemePreset)
+    : base.theme;
+
   return {
-    siteName: str(raw.siteName) || "Salfate Abogados",
+    ...base,
+    theme,
     contact: {
+      ...base.contact,
       email,
-      phone: phone || `+${whatsappNumber}`,
+      phone: str(contact.phone) || `+${whatsappNumber}`,
       phoneDisplay,
       whatsappNumber,
-      coverage: coverage || "Atención en todo Chile",
+      coverage: str(contact.coverage) || base.contact.coverage,
     },
-    hero: {
-      badge: str(hero.badge),
-      title: str(hero.title),
-      subtitle: str(hero.subtitle),
-      ctaPrimary: str(hero.ctaPrimary),
-      ctaSecondary: str(hero.ctaSecondary),
-    },
-    contactSection: {
-      title: str(contactSection.title),
-      description: str(contactSection.description),
-    },
-    strongCta: {
-      title: str(strongCta.title),
-      subtitle: str(strongCta.subtitle),
-    },
-    footer: {
-      tagline: str(footer.tagline),
-      disclaimer: str(footer.disclaimer),
-    },
+    siteName: str(raw.siteName) || base.siteName,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+export function computeContentMetrics(content: EditableContent) {
+  const areas = content.practiceAreas.areas.length;
+  const faqs = content.faq.items.length;
+  const audience = content.audience.blocks.length;
+  const steps = content.methodology.steps.length;
+
+  const checks = [
+    Boolean(content.contact.email),
+    Boolean(content.contact.phoneDisplay),
+    Boolean(content.contact.whatsappNumber),
+    Boolean(content.hero.title),
+    Boolean(content.hero.subtitle),
+    areas > 0,
+    faqs > 0,
+    Boolean(content.seo.title),
+    Boolean(content.footer.tagline),
+  ];
+  const completeness = Math.round(
+    (checks.filter(Boolean).length / checks.length) * 100
+  );
+
+  const textBlob = JSON.stringify(content);
+  const words = textBlob.split(/\s+/).filter(Boolean).length;
+
+  return {
+    completeness,
+    areas,
+    faqs,
+    audience,
+    steps,
+    words,
+    updatedAt: content.updatedAt || null,
   };
 }
 

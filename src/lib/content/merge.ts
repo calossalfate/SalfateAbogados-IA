@@ -1,6 +1,6 @@
 import type { SiteContent } from "@/lib/content/types";
 
-/** Combina contenido de Sanity con defaults; Sanity solo sobreescribe lo definido. */
+/** Combina contenido remoto con defaults; solo sobreescribe lo definido. */
 export function mergeSiteContent(
   defaults: SiteContent,
   remote: Partial<SiteContent> | null | undefined
@@ -25,12 +25,26 @@ export function mergeSiteContent(
         ? remote.hero.indicators
         : defaults.hero.indicators,
     },
+    audience: {
+      ...defaults.audience,
+      ...stripNulls(remote.audience),
+      blocks: remote.audience?.blocks?.length
+        ? remote.audience.blocks
+        : defaults.audience.blocks,
+    },
     practiceAreas: {
       ...defaults.practiceAreas,
       ...stripNulls(remote.practiceAreas),
       areas: remote.practiceAreas?.areas?.length
         ? remote.practiceAreas.areas
         : defaults.practiceAreas.areas,
+    },
+    methodology: {
+      ...defaults.methodology,
+      ...stripNulls(remote.methodology),
+      steps: remote.methodology?.steps?.length
+        ? remote.methodology.steps
+        : defaults.methodology.steps,
     },
     faq: {
       ...defaults.faq,

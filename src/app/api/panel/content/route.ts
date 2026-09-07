@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import {
+  computeContentMetrics,
   getEditableFromModule,
   sanitizeEditable,
 } from "@/lib/content/editable";
@@ -20,9 +21,13 @@ export async function GET() {
     return NextResponse.json({ error: "No autorizado." }, { status: 401 });
   }
 
+  const content = getEditableFromModule();
   return NextResponse.json({
-    content: getEditableFromModule(),
+    content,
     canSave: canPersistEditable(),
+    metrics: computeContentMetrics(content),
+    supportEmail:
+      process.env.PANEL_SUPPORT_EMAIL || "carlos.salfate@chileatiende.cl",
   });
 }
 
@@ -65,5 +70,6 @@ export async function PUT(request: Request) {
     mode: result.mode,
     message: result.message,
     content,
+    metrics: computeContentMetrics(content),
   });
 }
