@@ -41,6 +41,28 @@ export const defaultSiteContent: SiteContent = {
       "Atención nacional",
     ],
   },
+  audience: {
+    title: "Quienes confían en nuestro trabajo",
+    subtitle:
+      "Ajustamos el servicio al perfil del cliente, con la misma exigencia técnica en cada mandato.",
+    blocks: [
+      {
+        icon: "User",
+        title: "Personas naturales",
+        body: "Defensa en conflictos con la administración, familia, civil, penal menor y consumo. Acompañamiento cercano y explicaciones claras en cada etapa.",
+      },
+      {
+        icon: "Building",
+        title: "Empresas proveedoras del Estado",
+        body: "Licitaciones, impugnaciones, contratos con organismos públicos y cumplimiento normativo. Enfoque en continuidad del negocio y gestión de riesgos.",
+      },
+      {
+        icon: "Landmark",
+        title: "Funcionarios públicos e instituciones",
+        body: "Sumarios, reclamos administrativos, asesoría institucional y representación ante tribunales y órganos fiscalizadores.",
+      },
+    ],
+  },
   practiceAreas: {
     eyebrow: "Derecho público",
     title: "Especialidades principales",
@@ -121,6 +143,41 @@ export const defaultSiteContent: SiteContent = {
         title: "Estudios de Títulos y Corretaje",
         description:
           "Revisión de cadena dominial, riesgos registrales y apoyo en operaciones inmobiliarias.",
+      },
+    ],
+  },
+  methodology: {
+    title: "Metodología",
+    subtitle:
+      "Proceso transparente y ordenado, alineado a estándares de estudios que trabajan con sector público y litigación compleja.",
+    steps: [
+      {
+        step: "01",
+        title: "Evaluación inicial",
+        description:
+          "Reunión para entender hechos, partes, plazos y expectativas. Priorizamos claridad y confidencialidad desde el primer contacto.",
+        icon: "MessageSquare",
+      },
+      {
+        step: "02",
+        title: "Revisión documental",
+        description:
+          "Análisis ordenado de antecedentes, actuaciones administrativas y normativa aplicable al caso concreto.",
+        icon: "FolderOpen",
+      },
+      {
+        step: "03",
+        title: "Estrategia jurídica",
+        description:
+          "Diseño de alternativas procesales o administrativas, con evaluación de riesgos, costos y cronología razonable.",
+        icon: "Compass",
+      },
+      {
+        step: "04",
+        title: "Representación y seguimiento",
+        description:
+          "Presentación de escritos, audiencias y comunicación continua con informes de avance hasta cierre o nueva etapa.",
+        icon: "Handshake",
       },
     ],
   },

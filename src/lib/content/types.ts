@@ -11,6 +11,19 @@ export type FaqItem = {
   answer: string;
 };
 
+export type AudienceBlock = {
+  icon: string;
+  title: string;
+  body: string;
+};
+
+export type MethodologyStep = {
+  step: string;
+  title: string;
+  description: string;
+  icon: string;
+};
+
 export type SiteContent = {
   siteName: string;
   contact: {
@@ -37,6 +50,11 @@ export type SiteContent = {
     panelDisclaimer: string;
     indicators: string[];
   };
+  audience: {
+    title: string;
+    subtitle: string;
+    blocks: AudienceBlock[];
+  };
   practiceAreas: {
     eyebrow: string;
     title: string;
@@ -44,6 +62,11 @@ export type SiteContent = {
     subtitle2: string;
     cta: string;
     areas: PracticeAreaContent[];
+  };
+  methodology: {
+    title: string;
+    subtitle: string;
+    steps: MethodologyStep[];
   };
   faq: {
     title: string;
