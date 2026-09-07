@@ -3,7 +3,7 @@ import type { SiteContent } from "./types";
 export const defaultSiteContent: SiteContent = {
   siteName: "Salfate Abogados",
   contact: {
-    email: "info@salfateabogados.cl",
+    email: "contactoabogado@salfateabogados.cl",
     phone: "+56991545512",
     phoneDisplay: "+56 9 9154 5512",
     whatsappNumber: "56991545512",

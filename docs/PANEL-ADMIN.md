@@ -54,7 +54,7 @@ Agrega el email de tu hermano como **Editor** o **Administrator**.
 2. Verifica el dominio `salfateabogados.cl` (o usa `onboarding@resend.dev` para pruebas)
 3. Variables en Vercel:
    - `RESEND_API_KEY`
-   - `CONTACT_TO_EMAIL=info@salfateabogados.cl`
+   - `CONTACT_TO_EMAIL=contactoabogado@salfateabogados.cl`
    - `CONTACT_FROM_EMAIL=...`
 
 ## Si Sanity no está configurado
